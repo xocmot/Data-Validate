@@ -7,19 +7,19 @@ Data-Validate is a powerful validation engine for your HTML forms. It includes b
 
 Easy Setup in 3 steps. Provides the following validations: 
 
-•Required Field Validators (Radio, Checkbox, Textbox), 
-•Email Validator, 
-•Password Validator, 
-•Credit Card Validator, 
-•Compare Two Fields Validator, 
-•Minimum # of Characters Validator, 
-•Maximum # of Characters Validator, 
-•Range of Characters Validator, 
-•Alpha Characters Validator, 
-•Numeric Characters Validator, 
-•Alpha-Numeric Characters Validator, 
-•Alpha-Numeric and Alpha Numeric with Spaces Validator, 
-•AND Special Characters Validator.
+• Required Field Validators (Radio, Checkbox, Textbox)
+• Email Validator
+• Password Validator
+• Credit Card Validator
+• Compare Two Fields Validator
+• Minimum # of Characters Validator
+• Maximum # of Characters Validator
+• Range of Characters Validator
+• Alpha Characters Validator
+• Numeric Characters Validator
+• Alpha-Numeric Characters Validator
+• Alpha-Numeric and Alpha Numeric with Spaces Validator
+• AND Special Characters Validator
 
 Please donate if you like Data-Validate by going to Data-Validate.com and click the donate button.
 
