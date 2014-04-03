@@ -24,3 +24,5 @@ Easy Setup in 3 steps. Provides the following validations:
 Please donate if you like Data-Validate by going to Data-Validate.com and click the donate button.
 
 You may contact the developer Tom Cox at social@data-validate.com
+
+I give all glory and honor to Jesus Christ my Lord and Savior for the skills and opportunities given to me to accomplish this library. I used to be an denounced Christian turned atheist, but have since turned to Christ. Feel free to ask me about my testimony.
