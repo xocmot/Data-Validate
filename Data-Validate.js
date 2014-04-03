@@ -1,5 +1,3 @@
-/// <reference path="jquery-2.0.3.intellisense.js" />
-
 
 /*!
  * data-Validate JavaScript Library v1.0.0
@@ -21,6 +19,7 @@ var originNodeId = "-1";
 
 //ELEMENTS
 function dataValidateAddEvents() {
+    domcount = 0;
     var elements = document.getElementsByTagName('*');
     for (var e = 0; e < elements.length; e++) {
         var element = elements[e];
@@ -40,11 +39,18 @@ function dataValidateAddEvents() {
                 default:
                     //these tags are HTML 4.01 and HTML 5.0 compliant
                     //add an id to the element so I can differentiate between elements in the tree scan.
-                    if (element.id != null) {
-                        if (element.id == '') {
-                            element.id = 'av' + e.toString();
-                        }
+                    //if (element.id != null) {
+                    //    if (element.id == '') {
+                    //        element.id = 'av' + e.toString();
+                    //    }
+                    //}
+                    
+                    domcount = domcount + 1;
+                    var id = element.getAttribute("id");
+                    if (id == null || id == "" || id == "undefined") {
+                        element.setAttribute("id", "data-v-" + domcount);
                     }
+                    
                     var func;
                     switch (element.tagName.toUpperCase()) {
                         case "FORM":
@@ -79,6 +85,8 @@ function dataValidateAddEvents() {
                                 case "image":
                                 case "month":
                                 case "number":
+                                case "submit":
+                                    break;
                                 case "password":
                                 case "text":
                                     if (element.onkeyup == null) {
@@ -89,22 +97,23 @@ function dataValidateAddEvents() {
                                             element.setAttribute("onkeyup", "var vf = VF(this, true); if (vf) " + func + "; return vf;");
                                         }
                                     }
-                                    if (element.onkeydown == null) {
-                                        element.setAttribute("onkeydown", "return VF(this, true)");
-                                    } else {
-                                        if (typeof element.onkeydown.toString().indexOf("function") > -1) {
-                                            func = element.onkeydown.toString().substring(element.onkeydown.toString().indexOf("{") + 2, element.onkeydown.toString().indexOf("}") - 1);
-                                            element.setAttribute("onkeydown", "var vf = VF(this, true); if (vf) " + func + "; return vf;");
-                                        }
-                                    }
-                                    if (element.onkeypress == null) {
-                                        element.setAttribute("onkeypress", "return VF(this, true)");
-                                    } else {
-                                        if (typeof element.onkeypress.toString().indexOf("function") > -1) {
-                                            func = element.onkeypress.toString().substring(element.onkeypress.toString().indexOf("{") + 2, element.onkeypress.toString().indexOf("}") - 1);
-                                            element.setAttribute("onkeypress", "var vf = VF(this, true); if (vf) " + func + "; return vf;");
-                                        }
-                                    }
+                                    //Later Implementation, Conflicts with OnkeyUp
+                                    //if (element.onkeydown == null) {
+                                    //    element.setAttribute("onkeydown", "return VF(this, true)");
+                                    //} else {
+                                    //    if (typeof element.onkeydown.toString().indexOf("function") > -1) {
+                                    //        func = element.onkeydown.toString().substring(element.onkeydown.toString().indexOf("{") + 2, element.onkeydown.toString().indexOf("}") - 1);
+                                    //        element.setAttribute("onkeydown", "var vf = VF(this, true); if (vf) " + func + "; return vf;");
+                                    //    }
+                                    //}
+                                    //if (element.onkeypress == null) {
+                                    //    element.setAttribute("onkeypress", "return VF(this, true)");
+                                    //} else {
+                                    //    if (typeof element.onkeypress.toString().indexOf("function") > -1) {
+                                    //        func = element.onkeypress.toString().substring(element.onkeypress.toString().indexOf("{") + 2, element.onkeypress.toString().indexOf("}") - 1);
+                                    //        element.setAttribute("onkeypress", "var vf = VF(this, true); if (vf) " + func + "; return vf;");
+                                    //    }
+                                    //}
                                     if (element.onfocus == null) {
                                         element.setAttribute("onfocus", "return VF(this, true)");
                                     } else {
@@ -122,16 +131,6 @@ function dataValidateAddEvents() {
                                         }
                                     }
                                     break;
-                                case "submit":
-                                    if (element.onsubmit == null) {
-                                        element.setAttribute("onsubmit", "return VF(this, true)");
-                                    } else {
-                                        if (typeof element.onsubmit.toString().indexOf("function") > -1) {
-                                            func = element.onsubmit.toString().substring(element.onsubmit.toString().indexOf("{") + 2, element.onkeyup.toString().indexOf("}") - 1);
-                                            element.setAttribute("onsubmit", "var vf = VF(this, true); if (vf) " + func + "; return vf;");
-                                        }
-                                    }
-                                    break;
                                 default:
                                     break;
                             }
@@ -145,22 +144,23 @@ function dataValidateAddEvents() {
                                     element.setAttribute("onkeyup", "var vf = VF(this, true); if (vf) " + func + "; return vf;");
                                 }
                             }
-                            if (element.onkeydown == null) {
-                                element.setAttribute("onkeydown", "return VF(this, true)");
-                            } else {
-                                if (typeof element.onkeydown.toString().indexOf("function") > -1) {
-                                    func = element.onkeydown.toString().substring(element.onkeydown.toString().indexOf("{") + 2, element.onkeydown.toString().indexOf("}") - 1);
-                                    element.setAttribute("onkeydown", "var vf = VF(this, true); if (vf) " + func + "; return vf;");
-                                }
-                            }
-                            if (element.onkeypress == null) {
-                                element.setAttribute("onkeypress", "return VF(this, true)");
-                            } else {
-                                if (typeof element.onkeypress.toString().indexOf("function") > -1) {
-                                    func = element.onkeypress.toString().substring(element.onkeypress.toString().indexOf("{") + 2, element.onkeypress.toString().indexOf("}") - 1);
-                                    element.setAttribute("onkeypress", "var vf = VF(this, true); if (vf) " + func + "; return vf;");
-                                }
-                            }
+                            //Later Implementation, Conflicts with OnkeyUp
+                            //if (element.onkeydown == null) {
+                            //    element.setAttribute("onkeydown", "return VF(this, true)");
+                            //} else {
+                            //    if (typeof element.onkeydown.toString().indexOf("function") > -1) {
+                            //        func = element.onkeydown.toString().substring(element.onkeydown.toString().indexOf("{") + 2, element.onkeydown.toString().indexOf("}") - 1);
+                            //        element.setAttribute("onkeydown", "var vf = VF(this, true); if (vf) " + func + "; return vf;");
+                            //    }
+                            //}
+                            //if (element.onkeypress == null) {
+                            //    element.setAttribute("onkeypress", "return VF(this, true)");
+                            //} else {
+                            //    if (typeof element.onkeypress.toString().indexOf("function") > -1) {
+                            //        func = element.onkeypress.toString().substring(element.onkeypress.toString().indexOf("{") + 2, element.onkeypress.toString().indexOf("}") - 1);
+                            //        element.setAttribute("onkeypress", "var vf = VF(this, true); if (vf) " + func + "; return vf;");
+                            //    }
+                            //}
                             if (element.onfocus == null) {
                                 element.setAttribute("onfocus", "return VF(this, true)");
                             } else {
@@ -188,6 +188,7 @@ function dataValidateAddEvents() {
                         case "DATALIST":
                         case "KEYGEN":
                         case "OUTPUT":
+                            break;
                     }
                     break;
             }
@@ -197,6 +198,7 @@ function dataValidateAddEvents() {
 
 //ELEMENTS
 function dataValidateAddEventsJQ() {
+    domcount = 0;
     var elements = document.getElementsByTagName('*');
     for (var e = 0; e < elements.length; e++) {
         var element = elements[e];
@@ -216,10 +218,16 @@ function dataValidateAddEventsJQ() {
                 default:
                     //these tags are HTML 4.01 and HTML 5.0 compliant
                     //add an id to the element so I can differentiate between elements in the tree scan.
-                    if (element.id != null) {
-                        if (element.id == '') {
-                            element.id = 'av' + e.toString();
-                        }
+                    //if (element.id != null) {
+                    //    if (element.id == '') {
+                    //        element.id = 'av' + e.toString();
+                    //    }
+                    //}
+
+                    domcount = domcount + 1;
+                    var id = element.getAttribute("id");
+                    if (id == null || id == "" || id == "undefined") {
+                        element.setAttribute("id", "data-v-" + domcount);
                     }
                     var func;
                     switch (element.tagName.toUpperCase()) {
@@ -768,8 +776,8 @@ function ValidateElement(element, validateSingle) {
                                             errorAddToNode(element, elementCharCount + "please type no more than " + max.toString() + " characters", validationTypeName);
                                         }
                                         break;
-                                    case "minmax":
-                                        //usage: data-v-minmax="[minimum characters], [maximum characters]"
+                                    case "range":
+                                        //usage: data-v-range="[minimum characters], [maximum characters]"
                                         min = validationTypeValues[0];
                                         max = validationTypeValues[1];
                                         if (IsLengthInRange(element, min, max)) {
@@ -873,13 +881,31 @@ function returnHighestZIndex() {
     return highestZIndex;
 }
 
+function errorRemoveFromNode(element, errorType) {
+    if (element != null && errorType != null) {
+        var targetElement = document.getElementById(element.name + "error" + errorType);
+        if (targetElement != null) {
+            try {
+                element.parentNode.removeChild(targetElement);
+            } catch (e) {
+                //couldn't find the node...
+            }
+        }
+    }
+}
+
 function errorRemoveFromGroup(element, errorType) {
     if (element != null) {
         var x = document.getElementsByTagName("div");
         for (var e = 0; e < x.length; e++) {
             var targetElement = x[e];
             if (targetElement.id == element.name + "error" + errorType) {
-                element.parentNode.removeChild(targetElement);
+                try {
+                    element.parentNode.removeChild(targetElement);
+                } catch(e) {
+                    //couldn't find the node...
+                } 
+                
             }
         }
     }
@@ -917,22 +943,16 @@ function groupCheckedCount(element) {
 }
 
 function elementsAreEqual(element, elementTargetName) {
-    var targetElement = document.getElementById(elementTargetName);
-    if (targetElement != null && targetElement != "undefined") {
-        if (element.value == targetElement.value) {
-            return true;
+    var x = document.getElementsByName(elementTargetName);
+    for (var e = 0; e < x.length; e++) {
+        var targetElement = x[e];
+        if (targetElement != null && targetElement != "undefined") {
+            if (element.value == targetElement.value && element.value != '') {
+                return true;
+            }
         }
     }
     return false;
-}
-
-function errorRemoveFromNode(element, errorType) {
-    if (element != null && errorType != null) {
-        var targetElement = document.getElementById(element.name + "error" + errorType);
-        if (targetElement != null) {
-            element.parentNode.removeChild(targetElement);
-        }
-    }
 }
 
 function errorAddToNode(element, message, errorType) {
