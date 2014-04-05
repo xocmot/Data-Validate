@@ -1,26 +1,3 @@
-/// <reference path="jquery-2.0.3.intellisense.js" />
-
-//USE THE FOLLOWING TO POSITION THE ERROR DIV PERFECTLY, I RECCOMEND GIVING THE OPTION FOR DISPLAY LEFT, RIGHT, TOP, OR BOTTOM OF THE ELEMENT
-//<!DOCTYPE html>
-//<html>
-//<body>
-
-//<p id="demo" style="z-index:77;position:absolute;">Click the button get the node value of the button element</p>
-
-//<button onclick="myFunction()">Try it</button>
-
-//<script>
-//function myFunction()
-//{
-//    var c=document.getElementsByTagName("BUTTON")[0];
-//    var x=document.getElementById("demo");  
-//    x.innerHTML=c.childNodes[0].nodeValue;
-//    x.style.left = c.offsetLeft.toString() + 'px';
-//    x.style.top = (c.offsetTop + c.offsetHeight).toString() + 'px'; 
-//}
-//</script>
-//</body>
-//</html>
 /*!
  * data-Validate JavaScript Library v1.0.0
  * http://data-validate.com
