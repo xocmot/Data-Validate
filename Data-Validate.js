@@ -15,7 +15,6 @@ var children = new Array();
 var processed = new Array();
 var originNodeId = "-1";
 
-//****LEFT OFF HERE... NEED TO ADD ATTRIBUTES TO CONFIGURE EACH NODES PREFERENCE FOR POPUP, ALSO NEED TO ADD ONRESIZE EVENT TO CLEAR OR REDRAW ERROR MESSAGES
 //error DIV Configurations
 var desiredMode = "right";
 var desiredModeAvailable = false;
