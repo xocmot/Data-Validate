@@ -1,4 +1,26 @@
+/// <reference path="jquery-2.0.3.intellisense.js" />
 
+//USE THE FOLLOWING TO POSITION THE ERROR DIV PERFECTLY, I RECCOMEND GIVING THE OPTION FOR DISPLAY LEFT, RIGHT, TOP, OR BOTTOM OF THE ELEMENT
+//<!DOCTYPE html>
+//<html>
+//<body>
+
+//<p id="demo" style="z-index:77;position:absolute;">Click the button get the node value of the button element</p>
+
+//<button onclick="myFunction()">Try it</button>
+
+//<script>
+//function myFunction()
+//{
+//    var c=document.getElementsByTagName("BUTTON")[0];
+//    var x=document.getElementById("demo");  
+//    x.innerHTML=c.childNodes[0].nodeValue;
+//    x.style.left = c.offsetLeft.toString() + 'px';
+//    x.style.top = (c.offsetTop + c.offsetHeight).toString() + 'px'; 
+//}
+//</script>
+//</body>
+//</html>
 /*!
  * data-Validate JavaScript Library v1.0.0
  * http://data-validate.com
@@ -11,11 +33,21 @@
  */
 
 var allowableSpecialChars = "\!\@\#\$\^\&\_";
-var errorNodeStyle = "position:absolute;background-color:white;color:red;display:inline;margin:0px 10px 0px 10px;padding:0px 10px 0px 10px;border:solid black 1px;";
 var domcount = 0;
 var children = new Array();
 var processed = new Array();
 var originNodeId = "-1";
+
+//****LEFT OFF HERE... NEED TO ADD ATTRIBUTES TO CONFIGURE EACH NODES PREFERENCE FOR POPUP, ALSO NEED TO ADD ONRESIZE EVENT TO CLEAR OR REDRAW ERROR MESSAGES
+//error DIV Configurations
+var desiredMode = "right";
+var desiredModeAvailable = false;
+var errorDivWidth = 150;
+var errorDivHeight = 20;
+var additionalOffset = 10;
+var backgroundColor = '#b0c4de';
+var border = "1px solid black";
+var position = "absolute";
 
 //ELEMENTS
 function dataValidateAddEvents() {
@@ -53,6 +85,17 @@ function dataValidateAddEvents() {
                     
                     var func;
                     switch (element.tagName.toUpperCase()) {
+                        case "BODY":
+                            window.onresize = function (event) {
+                                var forms = document.getElementsByTagName('form');
+                                for (var f = 0; f < forms.length; f++) {
+                                    var form = forms[f];
+                                    if (!VF(form, false)) {
+                                        //validation requirements were found
+                                    }
+                                }
+                            };
+                            break;
                         case "FORM":
                             if (element.onsubmit == null) {
                                 element.setAttribute("onsubmit", "return VF(this, false)");
@@ -231,6 +274,17 @@ function dataValidateAddEventsJQ() {
                     }
                     var func;
                     switch (element.tagName.toUpperCase()) {
+                        case "BODY":
+                            window.onresize = function (event) {
+                                var forms = document.getElementsByTagName('form');
+                                for (var f = 0; f < forms.length; f++) {
+                                    var form = forms[f];
+                                    if (!VF(form, false)) {
+                                        //validation requirements were found
+                                    }
+                                }
+                            };
+                            break;
                         case "FORM":
                             $("#" + element.id).submit(
                                 function (event) {
@@ -961,10 +1015,9 @@ function errorAddToNode(element, message, errorType) {
             var newNode = document.createElement('div');
             newNode.setAttribute('id', element.name + "error" + errorType);
             newNode.setAttribute('class', 'AutoValidateErrors');
-            newNode.setAttribute('style', errorNodeStyle);
             newNode.style.zIndex = returnHighestZIndex() + 1;
             newNode.innerHTML = message;
-            element.parentNode.insertBefore(newNode, element.nextSibling);
+            element.parentNode.insertBefore(positionErrorElement(element, newNode), element.nextSibling);
         }
     }
 }
@@ -977,10 +1030,9 @@ function errorAddToFirstNodeInGroup(element, message, errorType) {
             var newNode = document.createElement('div');
             newNode.setAttribute('id', targetElement.name + "error" + errorType);
             newNode.setAttribute('class', 'AutoValidateErrors');
-            newNode.setAttribute('style', errorNodeStyle);
             newNode.style.zIndex = returnHighestZIndex() + 1;
             newNode.innerHTML = message;
-            targetElement.parentNode.insertBefore(newNode, targetElement.nextSibling);
+            targetElement.parentNode.insertBefore(positionErrorElement(targetElement, newNode), targetElement.nextSibling);
         }
     }
 }
@@ -993,10 +1045,9 @@ function errorAddBeforeFirstNodeInGroup(element, message, errorType) {
             var newNode = document.createElement('div');
             newNode.setAttribute('id', targetElement.name + "error" + errorType);
             newNode.setAttribute('class', 'AutoValidateErrors');
-            newNode.setAttribute('style', errorNodeStyle);
             newNode.style.zIndex = returnHighestZIndex() + 1;
             newNode.innerHTML = message;
-            targetElement.parentNode.insertBefore(newNode, targetElement);
+            targetElement.parentNode.insertBefore(positionErrorElement(targetElement, newNode), targetElement);
         }
     }
 }
@@ -1009,13 +1060,163 @@ function errorAddToLastNodeInGroup(element, message, errorType) {
             var newNode = document.createElement('div');
             newNode.setAttribute('id', targetElement.name + "error" + errorType);
             newNode.setAttribute('class', 'AutoValidateErrors');
-            newNode.setAttribute('style', errorNodeStyle);
             newNode.style.zIndex = returnHighestZIndex() + 1;
             newNode.innerHTML = message;
-            targetElement.parentNode.insertBefore(newNode, targetElement.nextSibling);
+            targetElement.parentNode.insertBefore(positionErrorElement(targetElement, newNode), targetElement.nextSibling);
         }
     }
 }
+
+/////////
+
+function positionErrorElement(origin, target) {
+
+    var c = origin;
+    var x = target;
+    x.style.backgroundColor = backgroundColor;
+    x.style.position = position;
+    x.style.border = border;
+    x.style.width = errorDivWidth.toString() + "px";
+    
+    var positions = findPosition(c);
+
+    var leftModeAvailable = false;
+    var topModeAvailable = false;
+    var rightModeAvailable = false;
+    var bottomModeAvailable = false;
+    desiredModeAvailable = false;
+    
+    //LEFT SPACE ALLOWS ERROR DIV?
+    if ((positions[0] - errorDivWidth) <= 0) { }
+    else { leftModeAvailable = true; }
+
+    //TOP SPACE ALLOWS ERROR DIV?
+    if ((positions[1] - errorDivHeight || (window.innerWidth - (positions[0] + errorDivWidth)) <= 0) <= 0) { }
+    else { topModeAvailable = true; }
+
+    //RIGHT SPACE ALLOWS ERROR DIV?
+    if (window.innerWidth - (positions[0] + c.offsetWidth + errorDivWidth + additionalOffset) <= 0 || window.innerHeight - (positions[1] + errorDivHeight) <= 0) { }
+    else { rightModeAvailable = true; }
+
+    //BOTTOM SPACE ALLOWS ERROR DIV?
+    if (window.innerWidth - (positions[1] + c.offsetHeight + errorDivHeight + additionalOffset) <= 0 || (window.innerWidth - (positions[0] + errorDivWidth)) <= 0) { }
+    else { bottomModeAvailable = true; }
+
+    //can desired mode be used?
+    switch (desiredMode) {
+        case "left":
+            if (leftModeAvailable) { desiredModeAvailable = true; }
+            break;
+        case "top":
+            if (topModeAvailable) { desiredModeAvailable = true; }
+            break;
+        case "right":
+            if (rightModeAvailable) { desiredModeAvailable = true; }
+            break;
+        case "bottom":
+            if (bottomModeAvailable) { desiredModeAvailable = true; }
+            break;
+        default:
+            break;
+    }
+
+    if (desiredModeAvailable) {
+        switch (desiredMode) {
+            case "left":
+                positionLeft(x, c, additionalOffset, errorDivWidth, errorDivHeight);
+                break;
+            case "top":
+                positionTop(x, c, additionalOffset, errorDivWidth, errorDivHeight);
+                break;
+            case "right":
+                positionRight(x, c, additionalOffset, errorDivWidth, errorDivHeight);
+                break;
+            case "bottom":
+                positionBottom(x, c, additionalOffset, errorDivWidth, errorDivHeight);
+                break;
+            default:
+                break;
+        }
+    }
+    else {
+        var exit = false;
+        for (var i = 1; i <= 4; i++) {
+            switch (i) {
+                case 1:
+                    if (leftModeAvailable) {
+                        positionLeft(x, c, additionalOffset, errorDivWidth, errorDivHeight);
+                        exit = true;
+                        break;
+                    }
+                case 2:
+                    if (topModeAvailable) {
+                        positionTop(x, c, additionalOffset, errorDivWidth, errorDivHeight);
+                        exit = true;
+                        break;
+                    }
+                case 3:
+                    if (rightModeAvailable) {
+                        positionRight(x, c, additionalOffset, errorDivWidth, errorDivHeight);
+                        exit = true;
+                        break;
+                    }
+                case 4:
+                    if (bottomModeAvailable) {
+                        positionBottom(x, c, additionalOffset, errorDivWidth, errorDivHeight);
+                        exit = true;
+                        break;
+                    }
+                default:
+                    positionRight(x, c, additionalOffset, errorDivWidth, errorDivHeight);
+                    break;
+            }
+            if (exit) {
+                break;
+            }
+        }
+    }
+
+    return target;
+}
+
+function positionLeft(x, c, additionalOffset, errorDivWidth, errorDivHeight) {
+    //LEFT OF PARENT ELEMENT
+    x.style.left = (findPosition(c)[0] - errorDivWidth - additionalOffset).toString() + 'px';
+    x.style.top = (findPosition(c)[1]).toString() + 'px';
+}
+
+function positionTop(x, c, additionalOffset, errorDivWidth, errorDivHeight) {
+    //TOP OF PARENT ELEMENT
+    x.style.left = (findPosition(c)[0]).toString() + 'px';
+    x.style.top = (findPosition(c)[1] - errorDivHeight - additionalOffset).toString() + 'px';
+}
+
+function positionRight(x, c, additionalOffset, errorDivWidth, errorDivHeight) {
+    //RIGHT OF PARENT ELEMENT
+    x.style.left = (findPosition(c)[0] + c.offsetWidth + additionalOffset).toString() + 'px';
+    x.style.top = (findPosition(c)[1]).toString() + 'px';
+}
+
+function positionBottom(x, c, additionalOffset, errorDivWidth, errorDivHeight) {
+    //BOTTOM OF PARENT ELEMENT
+    x.style.left = (findPosition(c)[0]).toString() + 'px';
+    x.style.top = (findPosition(c)[1] + c.offsetHeight + additionalOffset).toString() + 'px';
+}
+
+function findPosition(obj) {
+    var curleft = 0;
+    var curtop = 0;
+    if (obj.offsetParent) {
+        do {
+            curleft += obj.offsetLeft;
+            curtop += obj.offsetTop;
+        }
+        while (obj = obj.offsetParent);
+    }
+    return [curleft, curtop];
+}
+
+/////////
 
 function getElementValue(element) {
     if (element != null) {
