@@ -1,3 +1,4 @@
+
 /*!
  * data-Validate JavaScript Library v1.0.0
  * http://data-validate.com
@@ -21,12 +22,104 @@ var desiredModeAvailable = false;
 var errorDivWidth = 150;
 var errorDivHeight = 20;
 var additionalOffset = 10;
-var backgroundColor = '#b0c4de';
+var paddingLeft = 10;
+var paddingTop = 5;
+var paddingRight = 10;
+var paddingBottom = 5;
+var backgroundColor = '#FFE6E6';
+var fontColor = "#FF0000";
+var borderColor = "#FF0000";
 var border = "1px solid black";
 var position = "absolute";
 
+//other
+var elementFormIDCurrent = "";
+var validating = false;
+var resizing = false;
+var mouseDown = 0;
+var getFormOfSelectedElementCount = 0;
+var windowWidthCurrent = 0;
+var windowHeightCurrent = 0;
+var windowWidthPrevious = 0;
+var windowHeightPrevious = 0;
+
+function startTimerWatcher() {
+    isMouseDown();
+
+    setInterval(function () {
+        if (resizing && windowWidthPrevious == windowWidthCurrent) {
+            resizing = false;
+            var forms = document.getElementsByTagName('form');
+            for (var f = 0; f < forms.length; f++) {
+                var form = forms[f];
+                var id = form.getAttribute("id");
+                if (id != null && id != "" && id != "undefined") {
+                    if (elementFormIDCurrent == id) {
+                        if (!VF(form, false)) {
+                            //validation requirements were found
+                        }
+                    }
+                }
+                
+            }
+        }
+        getWindowWidth();
+        getWindowHeight();
+    }, 500);
+}
+
+//This function is deprecated until a way can be found to detect browser events outside the body tag
+function isMouseDown() {
+    document.body.onmousedown = function () {
+        ++mouseDown;
+    };
+    document.body.onmouseup = function () {
+        --mouseDown;
+    };
+}
+
+function getFormOfSelectedElement(element) {
+    getFormOfSelectedElementCount++;
+    if (getFormOfSelectedElementCount < 1000000) {
+        switch (element.tagName.toUpperCase()) {
+            case "FORM":
+                var id = element.getAttribute("id");
+                if (id != null && id != "" && id != "undefined") {
+                    elementFormIDCurrent = id;
+                    getFormOfSelectedElementCount = 0;
+                }
+                break;
+            case "BODY":
+            case "BASE":
+            case "HEAD":
+            case "HTML":
+            case "META":
+            case "PARAM":
+            case "SCRIPT":
+            case "STYLE":
+            case "TITLE":
+                break;
+            default:
+                getFormOfSelectedElement(element.parentNode);
+                break;
+        }
+    }
+}
+
+function getWindowWidth() {
+    windowWidthPrevious = windowWidthCurrent;
+    windowWidthCurrent = window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth;
+}
+
+function getWindowHeight() {
+    windowHeightPrevious = windowWidthCurrent;
+    windowHeightCurrent = window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight;
+}
+
 //ELEMENTS
 function dataValidateAddEvents() {
+    startTimerWatcher();
+
     domcount = 0;
     var elements = document.getElementsByTagName('*');
     for (var e = 0; e < elements.length; e++) {
@@ -47,29 +140,17 @@ function dataValidateAddEvents() {
                 default:
                     //these tags are HTML 4.01 and HTML 5.0 compliant
                     //add an id to the element so I can differentiate between elements in the tree scan.
-                    //if (element.id != null) {
-                    //    if (element.id == '') {
-                    //        element.id = 'av' + e.toString();
-                    //    }
-                    //}
-                    
                     domcount = domcount + 1;
                     var id = element.getAttribute("id");
                     if (id == null || id == "" || id == "undefined") {
                         element.setAttribute("id", "data-v-" + domcount);
                     }
-                    
+
                     var func;
                     switch (element.tagName.toUpperCase()) {
                         case "BODY":
                             window.onresize = function (event) {
-                                var forms = document.getElementsByTagName('form');
-                                for (var f = 0; f < forms.length; f++) {
-                                    var form = forms[f];
-                                    if (!VF(form, false)) {
-                                        //validation requirements were found
-                                    }
-                                }
+                                resizing = true;
                             };
                             break;
                         case "FORM":
@@ -217,6 +298,8 @@ function dataValidateAddEvents() {
 
 //ELEMENTS
 function dataValidateAddEventsJQ() {
+    startTimerWatcher();
+
     domcount = 0;
     var elements = document.getElementsByTagName('*');
     for (var e = 0; e < elements.length; e++) {
@@ -237,12 +320,6 @@ function dataValidateAddEventsJQ() {
                 default:
                     //these tags are HTML 4.01 and HTML 5.0 compliant
                     //add an id to the element so I can differentiate between elements in the tree scan.
-                    //if (element.id != null) {
-                    //    if (element.id == '') {
-                    //        element.id = 'av' + e.toString();
-                    //    }
-                    //}
-
                     domcount = domcount + 1;
                     var id = element.getAttribute("id");
                     if (id == null || id == "" || id == "undefined") {
@@ -252,13 +329,7 @@ function dataValidateAddEventsJQ() {
                     switch (element.tagName.toUpperCase()) {
                         case "BODY":
                             window.onresize = function (event) {
-                                var forms = document.getElementsByTagName('form');
-                                for (var f = 0; f < forms.length; f++) {
-                                    var form = forms[f];
-                                    if (!VF(form, false)) {
-                                        //validation requirements were found
-                                    }
-                                }
+                                resizing = true;
                             };
                             break;
                         case "FORM":
@@ -390,6 +461,8 @@ function dataValidateAddEventsJQ() {
 
 //VALIDATE FORM,ELEMENT
 function VF(e, validateSingle) {
+    getFormOfSelectedElement(e);
+    
     if (validateSingle == true) {
         return ValidateElement(e, validateSingle);
     } else {
@@ -932,10 +1005,10 @@ function errorRemoveFromGroup(element, errorType) {
             if (targetElement.id == element.name + "error" + errorType) {
                 try {
                     element.parentNode.removeChild(targetElement);
-                } catch(e) {
+                } catch (e) {
                     //couldn't find the node...
-                } 
-                
+                }
+
             }
         }
     }
@@ -1049,19 +1122,24 @@ function positionErrorElement(origin, target) {
 
     var c = origin;
     var x = target;
+    x.style.color = fontColor;
     x.style.backgroundColor = backgroundColor;
     x.style.position = position;
     x.style.border = border;
+    x.style.borderColor = borderColor;
     x.style.width = errorDivWidth.toString() + "px";
+    x.style.paddingLeft = paddingLeft;
+    x.style.paddingTop = paddingTop;
+    x.style.paddingRight = paddingRight;
+    x.style.paddingBottom = paddingBottom;
     
     var positions = findPosition(c);
-
     var leftModeAvailable = false;
     var topModeAvailable = false;
     var rightModeAvailable = false;
     var bottomModeAvailable = false;
     desiredModeAvailable = false;
-    
+
     //LEFT SPACE ALLOWS ERROR DIV?
     if ((positions[0] - errorDivWidth) <= 0) { }
     else { leftModeAvailable = true; }
