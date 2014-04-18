@@ -1,3 +1,4 @@
+/// <reference path="jquery-2.0.3.intellisense.js" />
 
 /*!
  * data-Validate JavaScript Library v1.0.0
@@ -15,6 +16,7 @@ var domcount = 0;
 var children = new Array();
 var processed = new Array();
 var originNodeId = "-1";
+var errorCount = 0;
 
 //error DIV Configurations
 var desiredMode = "right";
@@ -65,7 +67,7 @@ function startTimerWatcher() {
         }
         getWindowWidth();
         getWindowHeight();
-    }, 500);
+    }, 250);
 }
 
 //This function is deprecated until a way can be found to detect browser events outside the body tag
@@ -127,170 +129,136 @@ function dataValidateAddEvents() {
         if (typeof (element) == 'undefined' || element == null) { /* this element isn't an input element. */
         } else {
             switch (element.tagName.toUpperCase()) {
-                case "BASE":
-                case "HEAD":
-                case "HTML":
-                case "META":
-                case "PARAM":
-                case "SCRIPT":
-                case "STYLE":
-                case "TITLE":
-                    //do nothing, HTML 4.01 is not compatible with adding ID attributes to these tags
-                    break;
-                default:
-                    //these tags are HTML 4.01 and HTML 5.0 compliant
+            case "BASE":
+            case "HEAD":
+            case "HTML":
+            case "META":
+            case "PARAM":
+            case "SCRIPT":
+            case "STYLE":
+            case "TITLE":
+                //do nothing, HTML 4.01 is not compatible with adding ID attributes to these tags
+                break;
+            default:
+                //these tags are HTML 4.01 and HTML 5.0 compliant
                     //add an id to the element so I can differentiate between elements in the tree scan.
-                    domcount = domcount + 1;
-                    var id = element.getAttribute("id");
-                    if (id == null || id == "" || id == "undefined") {
-                        element.setAttribute("id", "data-v-" + domcount);
-                    }
+                domcount = domcount + 1;
+                var id = element.getAttribute("id");
+                if (id == null || id == "" || id == "undefined") {
+                    element.setAttribute("id", "data-v-" + domcount);
+                }
 
-                    var func;
-                    switch (element.tagName.toUpperCase()) {
-                        case "BODY":
-                            window.onresize = function (event) {
-                                resizing = true;
-                            };
-                            break;
-                        case "FORM":
-                            if (element.onsubmit == null) {
-                                element.setAttribute("onsubmit", "return VF(this, false)");
-                            } else {
-                                if (typeof element.onsubmit.toString().indexOf("function") > -1) {
-                                    func = element.onsubmit.toString().substring(element.onsubmit.toString().indexOf("{") + 2, element.onsubmit.toString().indexOf("}") - 1);
-                                    element.setAttribute("onsubmit", "var vf = VF(this, false); if (vf) " + func + "; return vf;");
-                                }
-                            }
-                            break;
-                        case "INPUT":
-                            switch (element.type.toLowerCase()) {
-                                case "button":
-                                case "radio":
-                                case "range":
-                                case "reset":
-                                case "search":
-                                case "tel":
-                                case "time":
-                                case "url":
-                                case "week":
-                                case "checkbox":
-                                case "color":
-                                case "date":
-                                case "datetime":
-                                case "datetime-local":
-                                case "email":
-                                case "file":
-                                case "hidden":
-                                case "image":
-                                case "month":
-                                case "number":
-                                case "submit":
-                                    break;
-                                case "password":
-                                case "text":
-                                    if (element.onkeyup == null) {
-                                        element.setAttribute("onkeyup", "return VF(this, true)");
-                                    } else {
-                                        if (typeof element.onkeyup.toString().indexOf("function") > -1) {
-                                            func = element.onkeyup.toString().substring(element.onkeyup.toString().indexOf("{") + 2, element.onkeyup.toString().indexOf("}") - 1);
-                                            element.setAttribute("onkeyup", "var vf = VF(this, true); if (vf) " + func + "; return vf;");
-                                        }
-                                    }
-                                    //Later Implementation, Conflicts with OnkeyUp
-                                    //if (element.onkeydown == null) {
-                                    //    element.setAttribute("onkeydown", "return VF(this, true)");
-                                    //} else {
-                                    //    if (typeof element.onkeydown.toString().indexOf("function") > -1) {
-                                    //        func = element.onkeydown.toString().substring(element.onkeydown.toString().indexOf("{") + 2, element.onkeydown.toString().indexOf("}") - 1);
-                                    //        element.setAttribute("onkeydown", "var vf = VF(this, true); if (vf) " + func + "; return vf;");
-                                    //    }
-                                    //}
-                                    //if (element.onkeypress == null) {
-                                    //    element.setAttribute("onkeypress", "return VF(this, true)");
-                                    //} else {
-                                    //    if (typeof element.onkeypress.toString().indexOf("function") > -1) {
-                                    //        func = element.onkeypress.toString().substring(element.onkeypress.toString().indexOf("{") + 2, element.onkeypress.toString().indexOf("}") - 1);
-                                    //        element.setAttribute("onkeypress", "var vf = VF(this, true); if (vf) " + func + "; return vf;");
-                                    //    }
-                                    //}
-                                    if (element.onfocus == null) {
-                                        element.setAttribute("onfocus", "return VF(this, true)");
-                                    } else {
-                                        if (typeof element.onfocus.toString().indexOf("function") > -1) {
-                                            func = element.onfocus.toString().substring(element.onfocus.toString().indexOf("{") + 2, element.onfocus.toString().indexOf("}") - 1);
-                                            element.setAttribute("onfocus", "var vf = VF(this, true); if (vf) " + func + "; return vf;");
-                                        }
-                                    }
-                                    if (element.onblur == null) {
-                                        element.setAttribute("onblur", "removeAllErrorMessages()");
-                                    } else {
-                                        if (typeof element.onblur.toString().indexOf("function") > -1) {
-                                            func = element.onblur.toString().substring(element.onblur.toString().indexOf("{") + 2, element.onblur.toString().indexOf("}") - 1);
-                                            element.setAttribute("onblur", "removeAllErrorMessages();" + func + ";");
-                                        }
-                                    }
-                                    break;
-                                default:
-                                    break;
-                            }
-                            break;
-                        case "TEXTAREA":
-                            if (element.onkeyup == null) {
-                                element.setAttribute("onkeyup", "return VF(this, true)");
-                            } else {
-                                if (typeof element.onkeyup.toString().indexOf("function") > -1) {
-                                    func = element.onkeyup.toString().substring(element.onkeyup.toString().indexOf("{") + 2, element.onkeyup.toString().indexOf("}") - 1);
-                                    element.setAttribute("onkeyup", "var vf = VF(this, true); if (vf) " + func + "; return vf;");
-                                }
-                            }
-                            //Later Implementation, Conflicts with OnkeyUp
-                            //if (element.onkeydown == null) {
-                            //    element.setAttribute("onkeydown", "return VF(this, true)");
-                            //} else {
-                            //    if (typeof element.onkeydown.toString().indexOf("function") > -1) {
-                            //        func = element.onkeydown.toString().substring(element.onkeydown.toString().indexOf("{") + 2, element.onkeydown.toString().indexOf("}") - 1);
-                            //        element.setAttribute("onkeydown", "var vf = VF(this, true); if (vf) " + func + "; return vf;");
-                            //    }
-                            //}
-                            //if (element.onkeypress == null) {
-                            //    element.setAttribute("onkeypress", "return VF(this, true)");
-                            //} else {
-                            //    if (typeof element.onkeypress.toString().indexOf("function") > -1) {
-                            //        func = element.onkeypress.toString().substring(element.onkeypress.toString().indexOf("{") + 2, element.onkeypress.toString().indexOf("}") - 1);
-                            //        element.setAttribute("onkeypress", "var vf = VF(this, true); if (vf) " + func + "; return vf;");
-                            //    }
-                            //}
-                            if (element.onfocus == null) {
-                                element.setAttribute("onfocus", "return VF(this, true)");
-                            } else {
-                                if (typeof element.onfocus.toString().indexOf("function") > -1) {
-                                    func = element.onfocus.toString().substring(element.onfocus.toString().indexOf("{") + 2, element.onfocus.toString().indexOf("}") - 1);
-                                    element.setAttribute("onfocus", "var vf = VF(this, true); if (vf) " + func + "; return vf;");
-                                }
-                            }
-                            if (element.onblur == null) {
-                                element.setAttribute("onblur", "removeAllErrorMessages()");
-                            } else {
-                                if (typeof element.onblur.toString().indexOf("function") > -1) {
-                                    func = element.onblur.toString().substring(element.onblur.toString().indexOf("{") + 2, element.onblur.toString().indexOf("}") - 1);
-                                    element.setAttribute("onblur", "removeAllErrorMessages();" + func + ";");
-                                }
-                            }
-                            break;
-                        case "LABEL":
-                        case "FIELDSET":
-                        case "LEGEND":
-                        case "SELECT":
-                        case "OPTGROUP":
-                        case "OPTION":
-                        case "BUTTON":
-                        case "DATALIST":
-                        case "KEYGEN":
-                        case "OUTPUT":
-                            break;
+                var func;
+                switch (element.tagName.toUpperCase()) {
+                case "BODY":
+                    window.onresize = function(event) {
+                        resizing = true;
+                    };
+                    break;
+                case "FORM":
+                    if (element.onsubmit == null) {
+                        element.setAttribute("onsubmit", "return VF(this, false)");
+                    } else {
+                        if (typeof element.onsubmit.toString().indexOf("function") > -1) {
+                            func = element.onsubmit.toString().substring(element.onsubmit.toString().indexOf("{") + 2, element.onsubmit.toString().indexOf("}") - 1);
+                            element.setAttribute("onsubmit", "var vf = VF(this, false); if (vf) " + func + "; return vf;");
+                        }
                     }
                     break;
+                case "INPUT":
+                    switch (element.type.toLowerCase()) {
+                    case "button":
+                    case "radio":
+                    case "range":
+                    case "reset":
+                    case "search":
+                    case "tel":
+                    case "time":
+                    case "url":
+                    case "week":
+                    case "checkbox":
+                    case "color":
+                    case "date":
+                    case "datetime":
+                    case "datetime-local":
+                    case "email":
+                    case "file":
+                    case "hidden":
+                    case "image":
+                    case "month":
+                    case "number":
+                    case "submit":
+                        break;
+                    case "password":
+                    case "text":
+                        if (element.onkeyup == null) {
+                            element.setAttribute("onkeyup", "return VF(this, true)");
+                        } else {
+                            if (typeof element.onkeyup.toString().indexOf("function") > -1) {
+                                func = element.onkeyup.toString().substring(element.onkeyup.toString().indexOf("{") + 2, element.onkeyup.toString().indexOf("}") - 1);
+                                element.setAttribute("onkeyup", "var vf = VF(this, true); if (vf) " + func + "; return vf;");
+                            }
+                        }
+                        if (element.onfocus == null) {
+                            element.setAttribute("onfocus", "return VF(this, true)");
+                        } else {
+                            if (typeof element.onfocus.toString().indexOf("function") > -1) {
+                                func = element.onfocus.toString().substring(element.onfocus.toString().indexOf("{") + 2, element.onfocus.toString().indexOf("}") - 1);
+                                element.setAttribute("onfocus", "var vf = VF(this, true); if (vf) " + func + "; return vf;");
+                            }
+                        }
+                        if (element.onblur == null) {
+                            element.setAttribute("onblur", "removeAllErrorMessages()");
+                        } else {
+                            if (typeof element.onblur.toString().indexOf("function") > -1) {
+                                func = element.onblur.toString().substring(element.onblur.toString().indexOf("{") + 2, element.onblur.toString().indexOf("}") - 1);
+                                element.setAttribute("onblur", "removeAllErrorMessages();" + func + ";");
+                            }
+                        }
+                        break;
+                    default:
+                        break;
+                    }
+                    break;
+                case "TEXTAREA":
+                    if (element.onkeyup == null) {
+                        element.setAttribute("onkeyup", "return VF(this, true)");
+                    } else {
+                        if (typeof element.onkeyup.toString().indexOf("function") > -1) {
+                            func = element.onkeyup.toString().substring(element.onkeyup.toString().indexOf("{") + 2, element.onkeyup.toString().indexOf("}") - 1);
+                            element.setAttribute("onkeyup", "var vf = VF(this, true); if (vf) " + func + "; return vf;");
+                        }
+                    }
+                    if (element.onfocus == null) {
+                        element.setAttribute("onfocus", "return VF(this, true)");
+                    } else {
+                        if (typeof element.onfocus.toString().indexOf("function") > -1) {
+                            func = element.onfocus.toString().substring(element.onfocus.toString().indexOf("{") + 2, element.onfocus.toString().indexOf("}") - 1);
+                            element.setAttribute("onfocus", "var vf = VF(this, true); if (vf) " + func + "; return vf;");
+                        }
+                    }
+                    if (element.onblur == null) {
+                        element.setAttribute("onblur", "removeAllErrorMessages()");
+                    } else {
+                        if (typeof element.onblur.toString().indexOf("function") > -1) {
+                            func = element.onblur.toString().substring(element.onblur.toString().indexOf("{") + 2, element.onblur.toString().indexOf("}") - 1);
+                            element.setAttribute("onblur", "removeAllErrorMessages();" + func + ";");
+                        }
+                    }
+                    break;
+                case "LABEL":
+                case "FIELDSET":
+                case "LEGEND":
+                case "SELECT":
+                case "OPTGROUP":
+                case "OPTION":
+                case "BUTTON":
+                case "DATALIST":
+                case "KEYGEN":
+                case "OUTPUT":
+                    break;
+                }
+                break;
             }
         }
     }
@@ -341,6 +309,15 @@ function dataValidateAddEventsJQ() {
                                     }
                                 }
                             );
+                            
+                            if (element.onsubmit != null) {
+                                $("#" + element.id).submit(element.onsubmit);
+                                $("#" + element.id).submit(function() {
+                                    return false;
+                                });
+
+                                element.onsubmit = "";
+                            }
                             break;
                         case "INPUT":
                             switch (element.type.toLowerCase()) {
@@ -375,20 +352,6 @@ function dataValidateAddEventsJQ() {
                                             }
                                         }
                                     );
-                                    $("#" + element.id).keydown(
-                                        function (event) {
-                                            if (!VF(this, true)) {
-                                                event.stopImmediatePropagation();
-                                            }
-                                        }
-                                    );
-                                    $("#" + element.id).keypress(
-                                        function (event) {
-                                            if (!VF(this, true)) {
-                                                event.stopImmediatePropagation();
-                                            }
-                                        }
-                                    );
                                     $("#" + element.id).focus(
                                         function (event) {
                                             if (!VF(this, true)) {
@@ -414,20 +377,6 @@ function dataValidateAddEventsJQ() {
                                     }
                                 }
                             );
-                            $("#" + element.id).keydown(
-                               function (event) {
-                                   if (!VF(this, true)) {
-                                       event.stopImmediatePropagation();
-                                   }
-                               }
-                           );
-                            $("#" + element.id).keypress(
-                               function (event) {
-                                   if (!VF(this, true)) {
-                                       event.stopImmediatePropagation();
-                                   }
-                               }
-                           );
                             $("#" + element.id).focus(
                                 function (event) {
                                     if (!VF(this, true)) {
@@ -717,7 +666,7 @@ function nodeIsApprovedType(node) {
 
 function ValidateElement(element, validateSingle) {
     var returnValue = false;
-    var errorCount = 0;
+    errorCount = 0;
 
     if (element != null) {
         var elementTagName = element.tagName.toUpperCase();
@@ -740,7 +689,7 @@ function ValidateElement(element, validateSingle) {
                                 switch (validationTypeName) {
                                     case "email":
                                         //usage: data-v-email=""
-                                        if (IsEmail(elementValue)) {
+                                        if (IsRFC822Email(elementValue)) {
                                             returnValue = true;
                                             errorRemoveFromNode(element, validationTypeName);
                                         } else {
@@ -807,7 +756,7 @@ function ValidateElement(element, validateSingle) {
                                             errorRemoveFromNode(element, validationTypeName);
                                         } else {
                                             errorCount = errorCount + 1;
-                                            errorAddToNode(element, validationTypeValuesC[1].toLowerCase() + " and " + validationTypeValuesC[2].toLowerCase() + " don't match", validationTypeName);
+                                            errorAddToNode(element, validationTypeValuesC[1] + " and " + validationTypeValuesC[2] + " don't match", validationTypeName);
                                         }
                                         break;
                                     case "required":
@@ -1059,7 +1008,7 @@ function elementsAreEqual(element, elementTargetName) {
 }
 
 function errorAddToNode(element, message, errorType) {
-    if (element != null && message != null && errorType != null) {
+    if (element != null && message != null && errorType != null && errorCount <=1) {
         if (!document.getElementById(element.name + "error" + errorType) || document.getElementById(element.name + "error" + errorType) == 'undefined') {
             var newNode = document.createElement('div');
             newNode.setAttribute('id', element.name + "error" + errorType);
@@ -1072,7 +1021,7 @@ function errorAddToNode(element, message, errorType) {
 }
 
 function errorAddToFirstNodeInGroup(element, message, errorType) {
-    if (element != null && message != null && errorType != null) {
+    if (element != null && message != null && errorType != null && errorCount <= 1) {
         if (!document.getElementById(element.name + "error" + errorType) || document.getElementById(element.name + "error" + errorType) == 'undefined') {
             var x = document.getElementsByName(element.name);
             var targetElement = x[0];
@@ -1087,7 +1036,7 @@ function errorAddToFirstNodeInGroup(element, message, errorType) {
 }
 
 function errorAddBeforeFirstNodeInGroup(element, message, errorType) {
-    if (element != null && message != null && errorType != null) {
+    if (element != null && message != null && errorType != null && errorCount <= 1) {
         if (!document.getElementById(element.name + "error" + errorType) || document.getElementById(element.name + "error" + errorType) == 'undefined') {
             var x = document.getElementsByName(element.name);
             var targetElement = x[0];
@@ -1102,7 +1051,7 @@ function errorAddBeforeFirstNodeInGroup(element, message, errorType) {
 }
 
 function errorAddToLastNodeInGroup(element, message, errorType) {
-    if (element != null && message != null && errorType != null) {
+    if (element != null && message != null && errorType != null && errorCount <= 1) {
         if (!document.getElementById(element.name + "error" + errorType) || document.getElementById(element.name + "error" + errorType) == 'undefined') {
             var x = document.getElementsByName(element.name);
             var targetElement = x[x.length - 1];
@@ -1177,7 +1126,7 @@ function positionErrorElement(origin, target) {
     if (desiredModeAvailable) {
         switch (desiredMode) {
             case "left":
-                positionLeft(x, c, additionalOffset, errorDivWidth, errorDivHeight);
+                positionLeft(x, c, additionalOffset + 20, errorDivWidth, errorDivHeight);
                 break;
             case "top":
                 positionTop(x, c, additionalOffset, errorDivWidth, errorDivHeight);
@@ -1198,7 +1147,7 @@ function positionErrorElement(origin, target) {
             switch (i) {
                 case 1:
                     if (leftModeAvailable) {
-                        positionLeft(x, c, additionalOffset, errorDivWidth, errorDivHeight);
+                        positionLeft(x, c, additionalOffset + 20, errorDivWidth, errorDivHeight);
                         exit = true;
                         break;
                     }
@@ -1313,14 +1262,39 @@ function IsLengthInRange(element, min, max) {
     }
 }
 
-function IsEmail(email) {
+
+// RFC822 email address spec
+var sQtext = '[^\\x0d\\x22\\x5c\\x80-\\xff]';
+var sDtext = '[^\\x0d\\x5b-\\x5d\\x80-\\xff]';
+var sAtom = '[^\\x00-\\x20\\x22\\x28\\x29\\x2c\\x2e\\x3a-\\x3c\\x3e\\x40\\x5b-\\x5d\\x7f-\\xff]+';
+var sQuotedPair = '\\x5c[\\x00-\\x7f]';
+var sDomainLiteral = '\\x5b(' + sDtext + '|' + sQuotedPair + ')*\\x5d';
+var sQuotedString = '\\x22(' + sQtext + '|' + sQuotedPair + ')*\\x22';
+var sDomainRef = sAtom;
+var sSubDomain = '(' + sDomainRef + '|' + sDomainLiteral + ')';
+var sWord = '(' + sAtom + '|' + sQuotedString + ')';
+var sDomain = sSubDomain + '(\\x2e' + sSubDomain + ')*';
+var sLocalPart = sWord + '(\\x2e' + sWord + ')*';
+var sAddrSpec = sLocalPart + '\\x40' + sDomain; 
+var sValidEmail = '^' + sAddrSpec + '$'; // as whole string
+
+function IsRFC822Email(email) {
     if (email.length > 0) {
-        var pattern = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/;
-        if (pattern.test(email)) {
+        var reValidEmail = new RegExp(sValidEmail);
+        if (reValidEmail.test(email)) {
             return true;
-        } else {
-            return false;
         }
+        return false;
+
+        //var pattern = /^[\w\.+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/;
+        //if (pattern.test(email)) {
+        //    pattern = null;
+        //    return true;
+        //} else {
+        //    pattern = null;
+
+        //    return false;
+        //}
     } else {
         return false;
     }
