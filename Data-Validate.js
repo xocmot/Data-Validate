@@ -1,3 +1,5 @@
+/// <reference path="jquery-2.0.3.intellisense.js" />
+
 /*!
  * data-Validate JavaScript Library v1.0.0
  * http://data-validate.com
@@ -18,6 +20,7 @@ var errorCount = 0;
 
 //error DIV Configurations
 var desiredMode = "right";
+var desiredModeOriginal = "right";
 var desiredModeAvailable = false;
 var errorDivWidth = 150;
 var errorDivHeight = 20;
@@ -83,11 +86,17 @@ function getFormOfSelectedElement(element) {
     if (getFormOfSelectedElementCount < 1000000) {
         switch (element.tagName.toUpperCase()) {
             case "FORM":
+                var desiredModeAttribute = element.getAttribute("data-v-desiredMode");
+                if (desiredModeAttribute != null && desiredModeAttribute != "" && desiredModeAttribute != "undefined") {
+                    desiredMode = desiredModeAttribute;
+                }
+                
                 var id = element.getAttribute("id");
                 if (id != null && id != "" && id != "undefined") {
                     elementFormIDCurrent = id;
                     getFormOfSelectedElementCount = 0;
                 }
+                
                 break;
             case "BODY":
             case "BASE":
@@ -665,6 +674,14 @@ function nodeIsApprovedType(node) {
 function ValidateElement(element, validateSingle) {
     var returnValue = false;
     errorCount = 0;
+
+    var form = document.getElementById(elementFormIDCurrent);
+    var desiredModeAttribute = form.getAttribute("data-v-desiredMode");
+    if (desiredModeAttribute != null && desiredModeAttribute != "" && desiredModeAttribute != "undefined") {
+        desiredMode = desiredModeAttribute;
+    } else {
+        desiredMode = desiredModeOriginal;
+    }
 
     if (element != null) {
         var elementTagName = element.tagName.toUpperCase();
