@@ -1,4 +1,3 @@
-/// <reference path="jquery-2.0.3.intellisense.js" />
 
 /*!
  * data-Validate JavaScript Library v1.0.0
