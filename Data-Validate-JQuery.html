@@ -1,14 +1,14 @@
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-    <title>Data-Validate Sample Page</title>
+    <title>Data-Validate JQuery Implementation Sample Page</title>
     <script src="jquery-2.0.3.min.js"></script>
     <script src="Data-Validate.js"></script>
     <script src="Data-Validate-JQuery.js"></script>
 </head>
     <body>
         <h1>Data-Validate JavaScript Validation JQuery Event Compatible</h1>
-        <a href="http://www.Data-Validate.com">Like Data-Validate? Donate Now!</a>
+        <a href="http://www.Data-Validate.com">http://www.Data-Validate.com</a>
         <form method="POST">
             <table>
                 <tr>
@@ -17,13 +17,13 @@
                         <table>
                             <tr>
                                 <td>Textbox</td>
-                                <td><input name="dvRequiredTB" type="text" value="" data-v-required="" /></td>
+                                <td><input name="dvRequiredTB" type="text" value="test" data-v-required="" /></td>
                             </tr>
                             <tr>
                                 <td>Radio or Checkbox</td>
                                 <td>
                                     <ul>
-                                        <li>One <input type="checkbox" name="dvRequiredCB" value="one" data-v-required=""/></li>
+                                        <li>One <input type="checkbox" name="dvRequiredCB" value="one" data-v-required="" checked="checked"/></li>
                                         <li>Two <input type="checkbox" name="dvRequiredCB" value="two" data-v-required=""/></li>
                                         <li>Three <input type="checkbox" name="dvRequiredCB" value="three" data-v-required=""/></li>
                                     </ul>
@@ -34,11 +34,11 @@
                 </tr>
                 <tr>
                     <td>Email Validator</td>
-                    <td><input name="dvEmailTB" type="text" value="" data-v-email="" /></td>
+                    <td><input name="dvEmailTB" type="text" value="me@you.com" data-v-email="" /></td>
                 </tr>
                 <tr>
                     <td>Password Validator</td>
-                    <td><input name="dvPasswordTB" type="password" value="" data-v-password="" /></td>
+                    <td><input name="dvPasswordTB" type="password" value="Abcdef123!" data-v-password="" /></td>
                 </tr>
                 <tr>
                     <td>Credit Card Validator</td>
@@ -50,44 +50,44 @@
                         <table>
                             <tr>
                                 <td>Source Field</td>
-                                <td><input name="dvCompareTBSource" type="text" value="" /></td>
+                                <td><input name="dvCompareTBSource" type="text" value="Testing" /></td>
                                 <td>Target Field</td>
-                                <td><input name="dvCompareTBTarget" type="text" value="" data-v-compare="dvCompareTBSource,Source Field,Target Field" /></td>
+                                <td><input name="dvCompareTBTarget" type="text" value="Testing" data-v-compare="dvCompareTBSource,Source Field,Target Field" /></td>
                             </tr>
                         </table>
                     </td>
                 </tr>
                 <tr>
                     <td>Minimum # of Characters Validator</td>
-                    <td><input name="dvMinimumTB" type="text" value="" data-v-min="5" /></td>
+                    <td><input name="dvMinimumTB" type="text" value="ABC123" data-v-min="5" /></td>
                 </tr>
                 <tr>
                     <td>Maximum # of Characters Validator</td>
-                    <td><input name="dvMaximumTB" type="text" value="" data-v-max="21" /></td>
+                    <td><input name="dvMaximumTB" type="text" value="ABC1234567" data-v-max="21" /></td>
                 </tr>
                 <tr>
                     <td>Range of Characters Validator</td>
-                    <td><input name="dvRangeTB" type="text" value="" data-v-range="5,21" /></td>
+                    <td><input name="dvRangeTB" type="text" value="ABC1234567" data-v-range="5,21" /></td>
                 </tr>
                 <tr>
                     <td>Alpha Characters Validator</td>
-                    <td><input name="dvAlphaTB" type="text" value="" data-v-a="" /></td>
+                    <td><input name="dvAlphaTB" type="text" value="ABCDEFGH" data-v-a="" /></td>
                 </tr>
                 <tr>
                     <td>Numeric Characters Validator</td>
-                    <td><input name="dvNumericTB" type="text" value="" data-v-n="" /></td>
+                    <td><input name="dvNumericTB" type="text" value="123456789" data-v-n="" /></td>
                 </tr>
                 <tr>
                     <td>Aplha-Numeric Characters Validator</td>
-                    <td><input name="dvAlphaNumericTB" type="text" value="" data-v-an="" /></td>
+                    <td><input name="dvAlphaNumericTB" type="text" value="ABC123" data-v-an="" /></td>
                 </tr>
                 <tr>
                     <td>Alpha-Numeric and Spaces Characters Validator</td>
-                    <td><input name="dvAlphaNumericWithSpacesTB" type="text" value="" data-v-anws="" /></td>
+                    <td><input name="dvAlphaNumericWithSpacesTB" type="text" value="ABC 123" data-v-anws="" /></td>
                 </tr>
                 <tr>
                     <td>Special Characters Validator</td>
-                    <td><input name="dvSpecialTB" type="text" value="" data-v-anwsc="" /></td>
+                    <td><input name="dvSpecialTB" type="text" value="ABC123$$" data-v-anwsc="" /></td>
                 </tr>
                 <tr>
                     <td>Example of *Multiple* Validator's</td>
@@ -95,9 +95,9 @@
                         <table>
                             <tr>
                                 <td>Source Field</td>
-                                <td><input name="dvMultipleSourceTB" type="text" value="" data-v-required="" data-v-email="" /></td>
+                                <td><input name="dvMultipleSourceTB" type="text" value="me@you.com" data-v-required="" data-v-email="" /></td>
                                 <td>Target Field</td>
-                                <td><input name="dvMultipleTargetTB" type="text" value="" data-v-required="" data-v-compare="dvMultipleSourceTB,Source Field,Target Field" /></td>
+                                <td><input name="dvMultipleTargetTB" type="text" value="me@you.com" data-v-required="" data-v-compare="dvMultipleSourceTB,Source Field,Target Field" /></td>
                             </tr>
                         </table>
                     
