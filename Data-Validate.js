@@ -167,7 +167,7 @@ function dataValidateAddEvents() {
                                 element.setAttribute("onsubmit", "return VF(this, false)");
                             } else {
                                 if (element.onsubmit.toString().indexOf("function") > -1) {
-                                    
+
                                     func = element.onsubmit.toString().substring(element.onsubmit.toString().indexOf("{") + 2, element.onsubmit.toString().indexOf("}") - 1);
 
                                     var execString = "var vf = VF(this, false); if (vf) " + func + ";";
@@ -175,7 +175,7 @@ function dataValidateAddEvents() {
                                     if (returnFalseEnabledForFormPostBackAttribute != null && returnFalseEnabledForFormPostBackAttribute != "" && returnFalseEnabledForFormPostBackAttribute != "undefined") {
                                         returnFalseEnabledForFormPostBack = returnFalseEnabledForFormPostBackAttribute;
                                     }
-                                    
+
                                     if (returnFalseEnabledForFormPostBack == "true") { execString = execString + "return false;"; }
                                     else { execString = execString + "return vf;"; }
 
@@ -206,6 +206,14 @@ function dataValidateAddEvents() {
                                 case "month":
                                 case "number":
                                 case "submit":
+                                    if (element.onclick == null) {
+                                        element.setAttribute("onclick", "return VF(this, false)");
+                                    } else {
+                                        if (typeof element.onclick.toString().indexOf("function") > -1) {
+                                            func = element.onclick.toString().substring(element.onclick.toString().indexOf("{") + 2, element.onclick.toString().indexOf("}") - 1);
+                                            element.setAttribute("onclick", "var vf = VF(this, false); if (vf) " + func + "; return vf;");
+                                        }
+                                    }
                                     break;
                                 case "password":
                                 case "text":
@@ -355,11 +363,27 @@ function dataValidateAddEventsJQ() {
                                 case "range":
                                 case "reset":
                                 case "search":
-                                case "submit":
                                 case "tel":
                                 case "time":
                                 case "url":
                                 case "week":
+                                    break;
+                                case "submit":
+                                    $("#" + element.id).click(
+                                        function (event) {
+                                            if (!VF(this, false)) {
+                                                event.stopImmediatePropagation();
+                                            }
+                                        }
+                                    );
+                                    if (element.onsubmit != null) {
+                                        $("#" + element.id).submit(element.onsubmit);
+                                        $("#" + element.id).submit(function () {
+                                            return false;
+                                        });
+
+                                        element.onsubmit = "";
+                                    }
                                     break;
                                 case "password":
                                 case "text":
@@ -439,22 +463,15 @@ function VF(e, validateSingle) {
         var form = null;
         if (e.tagName.toUpperCase() == "FORM") {
             form = e;
-        } else if (e.parentNode != null) {
-            if (e.parentNode.tagName.toUpperCase() == "FORM") {
-                form = e.parentNode;
-            }
+        } else if (elementFormIDCurrent != "") {
+            form = document.getElementById(elementFormIDCurrent);
         }
 
-        if (form != null) {
+        if (form != null && form != "undefined") {
             children = new Array();
             processed = new Array();
-            domcount = 0;
-
+            
             var id = form.getAttribute("id");
-            if (id == null || id == "" || id == "undefined") {
-                form.setAttribute("id", "data-v-" + domcount);
-            }
-            id = form.getAttribute("id");
             originNodeId = id;
             getAllChildNodesForNode(id);
             for (var n = 0; n < children.length; n++) {
@@ -485,13 +502,13 @@ function getAllChildNodesForNode(nodeId) {
 }
 
 function crawlNodeLineage(nodeId, direction) {
-
     var node = document.getElementById(nodeId);
     if (node != null) {
 
-        domcount = domcount + 1;
+        
         var id = node.getAttribute("id");
         if (id == null || id == "" || id == "undefined") {
+            domcount = domcount + 1;
             node.setAttribute("id", "data-v-" + domcount);
             id = node.getAttribute("id");
         }
@@ -504,6 +521,9 @@ function crawlNodeLineage(nodeId, direction) {
             //NOTE -- SUBMIT is skipped because I didn't think I would be validating the element, and all submissions would be occouring from the text
             switch (node.tagName.toUpperCase()) {
                 case "INPUT":
+                    //left off here... trying to figure out why the forms are not being crawled correctly...
+                    //Other forms are being included
+                    //alert(nodeId + '-' + direction + '-' + node.tagName.toLowerCase() + '-' + node.type.toLowerCase());
                     switch (node.type.toLowerCase()) {
                         case "checkbox":
                         case "file":
@@ -514,6 +534,7 @@ function crawlNodeLineage(nodeId, direction) {
                                 children[children.length] = nodeId;
                             }
                             break;
+                        case "submit":
                         case "color":
                         case "date":
                         case "datetime":
@@ -530,7 +551,6 @@ function crawlNodeLineage(nodeId, direction) {
                         case "range":
                         case "reset":
                         case "search":
-                        case "submit":
                         case "tel":
                         default:
                             break;
@@ -585,18 +605,25 @@ function crawlNodeLineage(nodeId, direction) {
 }
 
 function getFirstUsableChildNode(nodeId) {
-
+    //SOMETHING TO THINK ABOUT, BECAUSE OTHER DEVELOPERS MODIFY THE DOM
+    //MAYBE I SHOULD COUNT THE NODES AND USE THE COUNT TO ASSIGN AN ID TO ANY NODE 
+    //WITHOUT AN ID
+    //LEFT OFF HERE... TRYING TO FIGURE OUT WHY OPTION TAGS ARE RETURNING BODY TAG
     var node = document.getElementById(nodeId);
     for (var n = 0; n < node.children.length; n++) {
         var child = node.children[n];
-        if (child != null && !arrayContainsObject(child.id)) {
+        if (child != null) {
             var id = child.getAttribute("id");
             if (id == null || id == "" || id == "undefined") {
-                child.setAttribute("id", "data-v-" + domcount);
+                domcount = domcount + 1;
+                id = "data-v-" + domcount;
+                child.setAttribute("id", id);
             }
-            return child.id;
+            if (id != "" && !arrayContainsObject(id)) {
+                child = null;
+                return id;
+            }
         }
-        child = null;
     }
     return "-1";
 }
@@ -606,22 +633,30 @@ function getFirstUsableSiblingNode(nodeId) {
     var node = document.getElementById(nodeId);
     for (var n = 0; n < node.parentNode.children.length; n++) {
         var sibling = node.parentNode.children[n];
-        if (sibling != null && sibling.id != nodeId && !arrayContainsObject(sibling.id)) {
+        if (sibling != null) {
             var id = sibling.getAttribute("id");
-            if (id == null || id == "" || id == "undefined") {
-                sibling.setAttribute("id", "data-v-" + domcount);
+            if (sibling.id != nodeId) {
+                if (id == null || id == "" || id == "undefined") {
+                    domcount = domcount + 1;
+                    id = "data-v-" + domcount;
+                    sibling.setAttribute("id", id);
+                }
+                if (id != "" && !arrayContainsObject(id)) {
+                    sibling = null;
+                    return id;
+                }
             }
-            return sibling.id;
         }
-        sibling = null;
     }
     return "-1";
 }
 
 function arrayContainsObject(objectTarget) {
-    for (var i = 0; i < processed.length; i++) {
-        if (processed[i] == objectTarget) {
-            return true;
+    if (objectTarget != "") {
+        for (var i = 0; i < processed.length; i++) {
+            if (processed[i] == objectTarget) {
+                return true;
+            }
         }
     }
     return false;
@@ -636,10 +671,12 @@ function nodeIsApprovedType(node) {
                 case "password":
                 case "radio":
                 case "text":
+                
                     if (node.name != "") {
                         return true;
                     }
                     break;
+                case "submit":
                 case "color":
                 case "date":
                 case "datetime":
@@ -656,7 +693,6 @@ function nodeIsApprovedType(node) {
                 case "range":
                 case "reset":
                 case "search":
-                case "submit":
                 case "tel":
                 default:
                     break;
