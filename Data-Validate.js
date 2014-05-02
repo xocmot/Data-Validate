@@ -1,4 +1,5 @@
 
+
 /*!
  * data-Validate JavaScript Library v1.0.0
  * http://data-validate.com
@@ -41,6 +42,8 @@ var validating = false;
 var resizing = false;
 var mouseDown = 0;
 var getFormOfSelectedElementCount = 0;
+var getVisibilityOfSelectedElementCount = 0;
+var hasHiddenSelfOrParent = false;
 var windowWidthCurrent = 0;
 var windowHeightCurrent = 0;
 var windowWidthPrevious = 0;
@@ -110,6 +113,29 @@ function getFormOfSelectedElement(element) {
                 break;
             default:
                 getFormOfSelectedElement(element.parentNode);
+                break;
+        }
+    }
+}
+
+function getVisibilityOfSelectedElement(element) {
+    getVisibilityOfSelectedElementCount++;
+    if (getVisibilityOfSelectedElementCount < 1000000) {
+        switch (element.tagName.toUpperCase()) {
+            case "BODY":
+                getVisibilityOfSelectedElementCount = 0;
+                break;
+            default:
+                if (getVisibilityOfSelectedElementCount == 1) {
+                    hasHiddenSelfOrParent = false;
+                }
+                
+                if (element.currentStyle.display.toString().toLowerCase() == 'none' || element.currentStyle.visibility.toString().toLowerCase() == 'hidden' || element.disabled.toString().toLowerCase() == 'true') {
+                    hasHiddenSelfOrParent = true;
+                    getVisibilityOfSelectedElementCount = 0;
+                } else {
+                    getVisibilityOfSelectedElement(element.parentNode);
+                }
                 break;
         }
     }
@@ -186,7 +212,6 @@ function dataValidateAddEvents() {
                         case "INPUT":
                             switch (element.type.toLowerCase()) {
                                 case "button":
-                                case "radio":
                                 case "range":
                                 case "reset":
                                 case "search":
@@ -194,17 +219,16 @@ function dataValidateAddEvents() {
                                 case "time":
                                 case "url":
                                 case "week":
-                                case "checkbox":
                                 case "color":
                                 case "date":
                                 case "datetime":
                                 case "datetime-local":
                                 case "email":
-                                case "file":
                                 case "hidden":
                                 case "image":
                                 case "month":
                                 case "number":
+                                    break;
                                 case "submit":
                                     if (element.onclick == null) {
                                         element.setAttribute("onclick", "return VF(this, false)");
@@ -215,8 +239,20 @@ function dataValidateAddEvents() {
                                         }
                                     }
                                     break;
+                                case "radio":
+                                case "checkbox":
+                                    if (element.onclick == null) {
+                                        element.setAttribute("onclick", "return VF(this, true)");
+                                    } else {
+                                        if (typeof element.onclick.toString().indexOf("function") > -1) {
+                                            func = element.onclick.toString().substring(element.onclick.toString().indexOf("{") + 2, element.onclick.toString().indexOf("}") - 1);
+                                            element.setAttribute("onclick", "var vf = VF(this, true); if (vf) " + func + "; return vf;");
+                                        }
+                                    }
+                                    break;
                                 case "password":
                                 case "text":
+                                case "file":
                                     if (element.onkeyup == null) {
                                         element.setAttribute("onkeyup", "return VF(this, true)");
                                     } else {
@@ -272,10 +308,20 @@ function dataValidateAddEvents() {
                                 }
                             }
                             break;
+                        case "SELECT":
+                            if (element.onclick == null) {
+                                element.setAttribute("onclick", "removeAllErrorMessages()");
+                            } else {
+                                if (typeof element.onclick.toString().indexOf("function") > -1) {
+                                    func = element.onclick.toString().substring(element.onclick.toString().indexOf("{") + 2, element.onclick.toString().indexOf("}") - 1);
+                                    element.setAttribute("onclick", "removeAllErrorMessages();" + func + ";");
+                                }
+                            }
+                            break;
                         case "LABEL":
                         case "FIELDSET":
                         case "LEGEND":
-                        case "SELECT":
+                        
                         case "OPTGROUP":
                         case "OPTION":
                         case "BUTTON":
@@ -348,18 +394,15 @@ function dataValidateAddEventsJQ() {
                         case "INPUT":
                             switch (element.type.toLowerCase()) {
                                 case "button":
-                                case "checkbox":
                                 case "color":
                                 case "date":
                                 case "datetime":
                                 case "datetime-local":
                                 case "email":
-                                case "file":
                                 case "hidden":
                                 case "image":
                                 case "month":
                                 case "number":
-                                case "radio":
                                 case "range":
                                 case "reset":
                                 case "search":
@@ -371,6 +414,7 @@ function dataValidateAddEventsJQ() {
                                 case "submit":
                                     $("#" + element.id).click(
                                         function (event) {
+                                            
                                             if (!VF(this, false)) {
                                                 event.stopImmediatePropagation();
                                             }
@@ -385,8 +429,19 @@ function dataValidateAddEventsJQ() {
                                         element.onsubmit = "";
                                     }
                                     break;
+                                case "radio":
+                                case "checkbox":
+                                    $("#" + element.id).click(
+                                        function (event) {
+                                            if (!VF(this, true)) {
+                                                event.stopImmediatePropagation();
+                                            }
+                                        }
+                                    );
+                                    break;
                                 case "password":
                                 case "text":
+                                case "file":
                                     $("#" + element.id).keyup(
                                         function (event) {
                                             if (!VF(this, true)) {
@@ -432,10 +487,16 @@ function dataValidateAddEventsJQ() {
                                 }
                             );
                             break;
+                        case "SELECT":
+                            $("#" + element.id).change(
+                                        function () {
+                                            removeAllErrorMessages();
+                                        }
+                                    );
+                            break;
                         case "LABEL":
                         case "FIELDSET":
                         case "LEGEND":
-                        case "SELECT":
                         case "OPTGROUP":
                         case "OPTION":
                         case "BUTTON":
@@ -723,235 +784,240 @@ function ValidateElement(element, validateSingle) {
     errorCount = 0;
 
     var form = document.getElementById(elementFormIDCurrent);
-    var desiredModeAttribute = form.getAttribute("data-v-desiredMode");
-    if (desiredModeAttribute != null && desiredModeAttribute != "" && desiredModeAttribute != "undefined") {
-        desiredMode = desiredModeAttribute;
-    } else {
-        desiredMode = desiredModeOriginal;
-    }
+    if (form != null) {
+        var desiredModeAttribute = form.getAttribute("data-v-desiredMode");
+        if (desiredModeAttribute != null && desiredModeAttribute != "" && desiredModeAttribute != "undefined") {
+            desiredMode = desiredModeAttribute;
+        } else {
+            desiredMode = desiredModeOriginal;
+        }
 
-    if (element != null) {
-        var elementTagName = element.tagName.toUpperCase();
-        if (elementTagName == "INPUT") {
-            var elementValue = getElementValue(element);
-            var elementCharCount = "[(" + elementValue.length.toString() + ") chars] ";
-            for (var a = 0; a < element.attributes.length; a++) {
-                var attribute = element.attributes[a];
-                if (attribute != null) {
-                    if (attribute.value != null) {
-                        if (attribute.name.indexOf('data-v-') != -1) {
-                            var validationPartArray = attribute.name.split('-');
-                            if (validationPartArray.length > 2) {
-                                var validationTypeName = validationPartArray[2].toLowerCase();
-                                var validationTypeValues = attribute.value.replace(/ /gi, "").split(",");
-                                errorRemoveFromNode(element, validationTypeName);
-                                var max;
-                                var min;
+        if (element != null) {
+            var elementTagName = element.tagName.toUpperCase();
+            if (elementTagName == "INPUT") {
+                var elementValue = getElementValue(element);
+                var elementCharCount = "[(" + elementValue.length.toString() + ") chars] ";
+                for (var a = 0; a < element.attributes.length; a++) {
+                    var attribute = element.attributes[a];
+                    if (attribute != null) {
+                        if (attribute.value != null) {
+                            if (attribute.name.indexOf('data-v-') != -1) {
+                                getVisibilityOfSelectedElement(element);
+                                if (!hasHiddenSelfOrParent) {
+                                    var validationPartArray = attribute.name.split('-');
+                                    if (validationPartArray.length > 2) {
+                                        var validationTypeName = validationPartArray[2].toLowerCase();
+                                        var validationTypeValues = attribute.value.replace(/ /gi, "").split(",");
+                                        errorRemoveFromNode(element, validationTypeName);
+                                        var max;
+                                        var min;
 
-                                switch (validationTypeName) {
-                                    case "email":
-                                        //usage: data-v-email=""
-                                        if (IsRFC822Email(elementValue)) {
-                                            returnValue = true;
-                                            errorRemoveFromNode(element, validationTypeName);
-                                        } else {
-                                            errorCount = errorCount + 1;
-                                            errorAddToNode(element, "please enter a valid email address", validationTypeName);
-                                        }
-                                        break;
-                                    case "creditcard":
-                                        //usage: data-v-creditcard=""
-                                        if (IsValidCreditCard(elementValue)) {
-                                            returnValue = true;
-                                            errorRemoveFromNode(element, validationTypeName);
-                                        } else {
-                                            errorCount = errorCount + 1;
-                                            errorAddToNode(element, "please enter a valid credit card", validationTypeName);
-                                        }
-                                        break;
-                                    case "password":
-                                        //Validate Password:    
-                                        //Must be between 8 and 21 characters    
-                                        //Must have at least 1 number    
-                                        //Must have at least 1 special character    
-                                        //Must have at least 1 capital letter    
-                                        //usage: data-v-password=""
-                                        min = 8;
-                                        max = 21;
+                                        switch (validationTypeName) {
+                                            case "email":
+                                                //usage: data-v-email=""
+                                                if (IsRFC822Email(elementValue)) {
+                                                    returnValue = true;
+                                                    errorRemoveFromNode(element, validationTypeName);
+                                                } else {
+                                                    errorCount = errorCount + 1;
+                                                    errorAddToNode(element, "please enter a valid email address", validationTypeName);
+                                                }
+                                                break;
+                                            case "creditcard":
+                                                //usage: data-v-creditcard=""
+                                                if (IsValidCreditCard(elementValue)) {
+                                                    returnValue = true;
+                                                    errorRemoveFromNode(element, validationTypeName);
+                                                } else {
+                                                    errorCount = errorCount + 1;
+                                                    errorAddToNode(element, "please enter a valid credit card", validationTypeName);
+                                                }
+                                                break;
+                                            case "password":
+                                                //Validate Password:    
+                                                //Must be between 8 and 21 characters    
+                                                //Must have at least 1 number    
+                                                //Must have at least 1 special character    
+                                                //Must have at least 1 capital letter    
+                                                //usage: data-v-password=""
+                                                min = 8;
+                                                max = 21;
 
-                                        if (IsLengthInRange(element, 8, 21)) {
-                                            if (GetNumericCharacterCount(elementValue) >= 1) {
-                                                if (GetSpecialCharacterCount(elementValue) >= 1) {
-                                                    if (GetAlphaCapitalsCount(elementValue) >= 1) {
-                                                        returnValue = true;
-                                                        errorRemoveFromNode(element, validationTypeName);
+                                                if (IsLengthInRange(element, 8, 21)) {
+                                                    if (GetNumericCharacterCount(elementValue) >= 1) {
+                                                        if (GetSpecialCharacterCount(elementValue) >= 1) {
+                                                            if (GetAlphaCapitalsCount(elementValue) >= 1) {
+                                                                returnValue = true;
+                                                                errorRemoveFromNode(element, validationTypeName);
+                                                            }
+                                                            else {
+
+                                                                errorCount = errorCount + 1;
+                                                                errorAddToNode(element, "password must contain a capital letter", validationTypeName);
+                                                            }
+                                                        }
+                                                        else {
+                                                            errorCount = errorCount + 1;
+                                                            errorAddToNode(element, "password must contain a special character like " + allowableSpecialChars.replace(/\\/gi, ""), validationTypeName);
+                                                        }
                                                     }
                                                     else {
-
                                                         errorCount = errorCount + 1;
-                                                        errorAddToNode(element, "password must contain a capital letter", validationTypeName);
+                                                        errorAddToNode(element, "password must contain a number", validationTypeName);
+                                                    }
+                                                } else {
+                                                    errorCount = errorCount + 1;
+                                                    errorAddToNode(element, elementCharCount + "please type between " + min.toString() + " and " + max.toString() + " characters", validationTypeName);
+                                                }
+                                                break;
+                                            case "compare":
+                                                //Validate Two Compared Elements:    
+                                                //usage: data-v-compare="[Target Element HTML Name],[Source Element Error Title],[Target Element Error Title]" 
+                                                //Source Title: Password 1    
+                                                //Target Title: Password 2    
+                                                //usage: data-v-compare="password2,Password 1, Password 2"
+                                                var validationTypeValuesC = attribute.value.split(",");
+                                                if (elementsAreEqual(element, validationTypeValuesC[0])) {
+                                                    returnValue = true;
+                                                    errorRemoveFromNode(element, validationTypeName);
+                                                } else {
+                                                    errorCount = errorCount + 1;
+                                                    errorAddToNode(element, validationTypeValuesC[1] + " and " + validationTypeValuesC[2] + " don't match", validationTypeName);
+                                                }
+                                                break;
+                                            case "required":
+                                                //Validate Required Field:    
+                                                //If this is an element with multiple nodes, rules are applied based off options.    
+                                                //  RADIO
+                                                //      If data-validate-required attribute is set to "true", will check for a selected node and error if none selected.    
+                                                //      If data-validate-required attribute is set to "", will check for a selected node and error if none selected.    
+                                                //  CHECKBOX
+                                                //      If data-v-required attribute is set to "true", will check for a selected node, 
+                                                // and in addition will only allow one checkbox to be checked. If these rules are not met, an error is thrown.    
+                                                //      If data-v-required attribute is set to "", will check for a selected node, and will allow multiple checked checkboxes.    
+                                                //  TEXTBOX, OTHER FIELD TYPES   
+                                                //      Checks for a minimum of 1 character in the value, and if no value exists, throws an error
+                                                //usage: data-v-required="" or data-v-required="true"
+                                                var groupOneCheckOnly = false;
+                                                var groupOneCheckOnlyValue = validationTypeValues[0];
+                                                var elementHasErrors = elementHasError(element, validationTypeName);
+                                                if (groupOneCheckOnlyValue == "true") { groupOneCheckOnly = true; }
+
+                                                if (element.type == "radio" || element.type == "checkbox") {
+                                                    var groupCheckedCounts = groupCheckedCount(element);
+                                                    if ((groupOneCheckOnly && groupCheckedCounts == 1) || (!groupOneCheckOnly && groupCheckedCounts >= 1)) {
+                                                        errorRemoveFromGroup(element, validationTypeName);
+                                                        returnValue = true;
+                                                    } else if (groupCheckedCounts == 0) {
+                                                        if (elementHasErrors) {
+                                                            errorRemoveFromGroup(element, validationTypeName);
+                                                        }
+                                                        errorAddBeforeFirstNodeInGroup(element, "required field", validationTypeName);
+                                                        errorCount = errorCount + 1;
+                                                    } else if (groupOneCheckOnly && groupCheckedCounts > 1) {
+                                                        if (elementHasErrors) {
+                                                            errorRemoveFromGroup(element, validationTypeName);
+                                                        }
+                                                        errorAddBeforeFirstNodeInGroup(element, "select only one", validationTypeName);
+                                                        errorCount = errorCount + 1;
                                                     }
                                                 }
                                                 else {
+                                                    if (elementValue.length > 0) {
+                                                        returnValue = true;
+                                                        errorRemoveFromNode(element, validationTypeName);
+                                                    } else {
+                                                        errorCount = errorCount + 1;
+                                                        errorAddToNode(element, "required field", validationTypeName);
+                                                    }
+                                                }
+                                                break;
+                                            case "min":
+                                                //usage: data-v-min="[minimum # characters]"
+                                                min = validationTypeValues[0];
+                                                if (IsLengthInRange(element, min, 1024)) {
+                                                    returnValue = true;
+                                                    errorRemoveFromNode(element, validationTypeName);
+                                                } else {
                                                     errorCount = errorCount + 1;
-                                                    errorAddToNode(element, "password must contain a special character like " + allowableSpecialChars.replace(/\\/gi, ""), validationTypeName);
+                                                    errorAddToNode(element, elementCharCount + "please type a minimum of " + min.toString() + " characters", validationTypeName);
                                                 }
-                                            }
-                                            else {
-                                                errorCount = errorCount + 1;
-                                                errorAddToNode(element, "password must contain a number", validationTypeName);
-                                            }
-                                        } else {
-                                            errorCount = errorCount + 1;
-                                            errorAddToNode(element, elementCharCount + "please type between " + min.toString() + " and " + max.toString() + " characters", validationTypeName);
-                                        }
-                                        break;
-                                    case "compare":
-                                        //Validate Two Compared Elements:    
-                                        //usage: data-v-compare="[Target Element HTML Name],[Source Element Error Title],[Target Element Error Title]" 
-                                        //Source Title: Password 1    
-                                        //Target Title: Password 2    
-                                        //usage: data-v-compare="password2,Password 1, Password 2"
-                                        var validationTypeValuesC = attribute.value.split(",");
-                                        if (elementsAreEqual(element, validationTypeValuesC[0])) {
-                                            returnValue = true;
-                                            errorRemoveFromNode(element, validationTypeName);
-                                        } else {
-                                            errorCount = errorCount + 1;
-                                            errorAddToNode(element, validationTypeValuesC[1] + " and " + validationTypeValuesC[2] + " don't match", validationTypeName);
-                                        }
-                                        break;
-                                    case "required":
-                                        //Validate Required Field:    
-                                        //If this is an element with multiple nodes, rules are applied based off options.    
-                                        //  RADIO
-                                        //      If data-validate-required attribute is set to "true", will check for a selected node and error if none selected.    
-                                        //      If data-validate-required attribute is set to "", will check for a selected node and error if none selected.    
-                                        //  CHECKBOX
-                                        //      If data-v-required attribute is set to "true", will check for a selected node, 
-                                        // and in addition will only allow one checkbox to be checked. If these rules are not met, an error is thrown.    
-                                        //      If data-v-required attribute is set to "", will check for a selected node, and will allow multiple checked checkboxes.    
-                                        //  TEXTBOX, OTHER FIELD TYPES   
-                                        //      Checks for a minimum of 1 character in the value, and if no value exists, throws an error
-                                        //usage: data-v-required="" or data-v-required="true"
-                                        var groupOneCheckOnly = false;
-                                        var groupOneCheckOnlyValue = validationTypeValues[0];
-                                        var elementHasErrors = elementHasError(element, validationTypeName);
-                                        if (groupOneCheckOnlyValue == "true") { groupOneCheckOnly = true; }
-
-                                        if (element.type == "radio" || element.type == "checkbox") {
-                                            var groupCheckedCounts = groupCheckedCount(element);
-                                            if ((groupOneCheckOnly && groupCheckedCounts == 1) || (!groupOneCheckOnly && groupCheckedCounts >= 1)) {
-                                                errorRemoveFromGroup(element, validationTypeName);
-                                                returnValue = true;
-                                            } else if (groupCheckedCounts == 0) {
-                                                if (elementHasErrors) {
-                                                    errorRemoveFromGroup(element, validationTypeName);
+                                                break;
+                                            case "max":
+                                                //usage: data-v-max="[maximum # characters]"
+                                                max = validationTypeValues[0];
+                                                if (IsLengthInRange(element, 0, max)) {
+                                                    returnValue = true;
+                                                    errorRemoveFromNode(element, validationTypeName);
+                                                } else {
+                                                    errorCount = errorCount + 1;
+                                                    errorAddToNode(element, elementCharCount + "please type no more than " + max.toString() + " characters", validationTypeName);
                                                 }
-                                                errorAddBeforeFirstNodeInGroup(element, "required field", validationTypeName);
-                                                errorCount = errorCount + 1;
-                                            } else if (groupOneCheckOnly && groupCheckedCounts > 1) {
-                                                if (elementHasErrors) {
-                                                    errorRemoveFromGroup(element, validationTypeName);
+                                                break;
+                                            case "range":
+                                                //usage: data-v-range="[minimum characters], [maximum characters]"
+                                                min = validationTypeValues[0];
+                                                max = validationTypeValues[1];
+                                                if (IsLengthInRange(element, min, max)) {
+                                                    returnValue = true;
+                                                    errorRemoveFromNode(element, validationTypeName);
+                                                } else {
+                                                    errorCount = errorCount + 1;
+                                                    errorAddToNode(element, elementCharCount + "please type between " + min.toString() + " and " + max.toString() + " characters", validationTypeName);
                                                 }
-                                                errorAddBeforeFirstNodeInGroup(element, "select only one", validationTypeName);
-                                                errorCount = errorCount + 1;
-                                            }
+                                                break;
+                                            case "a":
+                                                //usage: data-v-a=""
+                                                if (IsAlpha(elementValue)) {
+                                                    returnValue = true;
+                                                    errorRemoveFromNode(element, validationTypeName);
+                                                } else {
+                                                    errorCount = errorCount + 1;
+                                                    errorAddToNode(element, "letters only", validationTypeName);
+                                                }
+                                                break;
+                                            case "n":
+                                                //usage: data-v-n=""
+                                                if (IsNumeric(elementValue)) {
+                                                    returnValue = true;
+                                                    errorRemoveFromNode(element, validationTypeName);
+                                                } else {
+                                                    errorCount = errorCount + 1;
+                                                    errorAddToNode(element, "numbers only", validationTypeName);
+                                                }
+                                                break;
+                                            case "an":
+                                                //usage: data-v-an=""
+                                                if (IsAlphaNumeric(elementValue)) {
+                                                    returnValue = true;
+                                                    errorRemoveFromNode(element, validationTypeName);
+                                                } else {
+                                                    errorCount = errorCount + 1;
+                                                    errorAddToNode(element, "letters and numbers only, no spaces", validationTypeName);
+                                                }
+                                                break;
+                                            case "anws":
+                                                //usage: data-v-anws=""
+                                                if (IsAlphaNumericWithSpaces(elementValue)) {
+                                                    returnValue = true;
+                                                    errorRemoveFromNode(element, validationTypeName);
+                                                } else {
+                                                    errorCount = errorCount + 1;
+                                                    errorAddToNode(element, "letters, numbers, and spaces only", validationTypeName);
+                                                }
+                                                break;
+                                            case "anwsc":
+                                                //usage: data-v-anwsc=""
+                                                if (IsAlphaNumericWithSpecialCharacters(elementValue)) {
+                                                    returnValue = true;
+                                                    errorRemoveFromNode(element, validationTypeName);
+                                                } else {
+                                                    errorCount = errorCount + 1;
+                                                    errorAddToNode(element, "no spaces allowed", validationTypeName);
+                                                }
+                                                break;
                                         }
-                                        else {
-                                            if (elementValue.length > 0) {
-                                                returnValue = true;
-                                                errorRemoveFromNode(element, validationTypeName);
-                                            } else {
-                                                errorCount = errorCount + 1;
-                                                errorAddToNode(element, "required field", validationTypeName);
-                                            }
-                                        }
-                                        break;
-                                    case "min":
-                                        //usage: data-v-min="[minimum # characters]"
-                                        min = validationTypeValues[0];
-                                        if (IsLengthInRange(element, min, 1024)) {
-                                            returnValue = true;
-                                            errorRemoveFromNode(element, validationTypeName);
-                                        } else {
-                                            errorCount = errorCount + 1;
-                                            errorAddToNode(element, elementCharCount + "please type a minimum of " + min.toString() + " characters", validationTypeName);
-                                        }
-                                        break;
-                                    case "max":
-                                        //usage: data-v-max="[maximum # characters]"
-                                        max = validationTypeValues[0];
-                                        if (IsLengthInRange(element, 0, max)) {
-                                            returnValue = true;
-                                            errorRemoveFromNode(element, validationTypeName);
-                                        } else {
-                                            errorCount = errorCount + 1;
-                                            errorAddToNode(element, elementCharCount + "please type no more than " + max.toString() + " characters", validationTypeName);
-                                        }
-                                        break;
-                                    case "range":
-                                        //usage: data-v-range="[minimum characters], [maximum characters]"
-                                        min = validationTypeValues[0];
-                                        max = validationTypeValues[1];
-                                        if (IsLengthInRange(element, min, max)) {
-                                            returnValue = true;
-                                            errorRemoveFromNode(element, validationTypeName);
-                                        } else {
-                                            errorCount = errorCount + 1;
-                                            errorAddToNode(element, elementCharCount + "please type between " + min.toString() + " and " + max.toString() + " characters", validationTypeName);
-                                        }
-                                        break;
-                                    case "a":
-                                        //usage: data-v-a=""
-                                        if (IsAlpha(elementValue)) {
-                                            returnValue = true;
-                                            errorRemoveFromNode(element, validationTypeName);
-                                        } else {
-                                            errorCount = errorCount + 1;
-                                            errorAddToNode(element, "letters only", validationTypeName);
-                                        }
-                                        break;
-                                    case "n":
-                                        //usage: data-v-n=""
-                                        if (IsNumeric(elementValue)) {
-                                            returnValue = true;
-                                            errorRemoveFromNode(element, validationTypeName);
-                                        } else {
-                                            errorCount = errorCount + 1;
-                                            errorAddToNode(element, "numbers only", validationTypeName);
-                                        }
-                                        break;
-                                    case "an":
-                                        //usage: data-v-an=""
-                                        if (IsAlphaNumeric(elementValue)) {
-                                            returnValue = true;
-                                            errorRemoveFromNode(element, validationTypeName);
-                                        } else {
-                                            errorCount = errorCount + 1;
-                                            errorAddToNode(element, "letters and numbers only, no spaces", validationTypeName);
-                                        }
-                                        break;
-                                    case "anws":
-                                        //usage: data-v-anws=""
-                                        if (IsAlphaNumericWithSpaces(elementValue)) {
-                                            returnValue = true;
-                                            errorRemoveFromNode(element, validationTypeName);
-                                        } else {
-                                            errorCount = errorCount + 1;
-                                            errorAddToNode(element, "letters, numbers, and spaces only", validationTypeName);
-                                        }
-                                        break;
-                                    case "anwsc":
-                                        //usage: data-v-anwsc=""
-                                        if (IsAlphaNumericWithSpecialCharacters(elementValue)) {
-                                            returnValue = true;
-                                            errorRemoveFromNode(element, validationTypeName);
-                                        } else {
-                                            errorCount = errorCount + 1;
-                                            errorAddToNode(element, "no spaces allowed", validationTypeName);
-                                        }
-                                        break;
+                                    }
                                 }
                             }
                         }
@@ -959,9 +1025,9 @@ function ValidateElement(element, validateSingle) {
                 }
             }
         }
-    }
 
-    return errorCount > 0;
+        return errorCount > 0;
+    }
 }
 
 function removeAllErrorMessages() {
