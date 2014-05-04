@@ -834,12 +834,8 @@ function crawlNodeLineage(nodeId, direction) {
         }
 
         if (direction != "up" && node.tagName != null && node.tagName != "undefined") {
-            //NOTE -- SUBMIT is skipped because I didn't think I would be validating the element, and all submissions would be occouring from the text
             switch (node.tagName.toUpperCase()) {
                 case "INPUT":
-                    //left off here... trying to figure out why the forms are not being crawled correctly...
-                    //Other forms are being included
-                    //alert(nodeId + '-' + direction + '-' + node.tagName.toLowerCase() + '-' + node.type.toLowerCase());
                     switch (node.type.toLowerCase()) {
                         case "checkbox":
                         case "file":
@@ -921,10 +917,6 @@ function crawlNodeLineage(nodeId, direction) {
 }
 
 function getFirstUsableChildNode(nodeId) {
-    //SOMETHING TO THINK ABOUT, BECAUSE OTHER DEVELOPERS MODIFY THE DOM
-    //MAYBE I SHOULD COUNT THE NODES AND USE THE COUNT TO ASSIGN AN ID TO ANY NODE 
-    //WITHOUT AN ID
-    //LEFT OFF HERE... TRYING TO FIGURE OUT WHY OPTION TAGS ARE RETURNING BODY TAG
     var node = document.getElementById(nodeId);
     for (var n = 0; n < node.children.length; n++) {
         var child = node.children[n];
@@ -1397,16 +1389,6 @@ function IsRFC822Email(email) {
             return true;
         }
         return false;
-
-        //var pattern = /^[\w\.+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/;
-        //if (pattern.test(email)) {
-        //    pattern = null;
-        //    return true;
-        //} else {
-        //    pattern = null;
-
-        //    return false;
-        //}
     } else {
         return false;
     }
