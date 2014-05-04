@@ -1,4 +1,4 @@
-
+/// <reference path="jquery-2.0.3.intellisense.js" />
 
 /*!
  * data-Validate JavaScript Library v1.0.0
@@ -49,109 +49,22 @@ var windowHeightCurrent = 0;
 var windowWidthPrevious = 0;
 var windowHeightPrevious = 0;
 
-function startTimerWatcher() {
-    isMouseDown();
+// RFC822 email address spec
+var sQtext = '[^\\x0d\\x22\\x5c\\x80-\\xff]';
+var sDtext = '[^\\x0d\\x5b-\\x5d\\x80-\\xff]';
+var sAtom = '[^\\x00-\\x20\\x22\\x28\\x29\\x2c\\x2e\\x3a-\\x3c\\x3e\\x40\\x5b-\\x5d\\x7f-\\xff]+';
+var sQuotedPair = '\\x5c[\\x00-\\x7f]';
+var sDomainLiteral = '\\x5b(' + sDtext + '|' + sQuotedPair + ')*\\x5d';
+var sQuotedString = '\\x22(' + sQtext + '|' + sQuotedPair + ')*\\x22';
+var sDomainRef = sAtom;
+var sSubDomain = '(' + sDomainRef + '|' + sDomainLiteral + ')';
+var sWord = '(' + sAtom + '|' + sQuotedString + ')';
+var sDomain = sSubDomain + '(\\x2e' + sSubDomain + ')*';
+var sLocalPart = sWord + '(\\x2e' + sWord + ')*';
+var sAddrSpec = sLocalPart + '\\x40' + sDomain;
+var sValidEmail = '^' + sAddrSpec + '$'; // as whole string
 
-    setInterval(function () {
-        if (resizing && windowWidthPrevious == windowWidthCurrent) {
-            resizing = false;
-            var forms = document.getElementsByTagName('form');
-            for (var f = 0; f < forms.length; f++) {
-                var form = forms[f];
-                var id = form.getAttribute("id");
-                if (id != null && id != "" && id != "undefined") {
-                    if (elementFormIDCurrent == id) {
-                        if (!VF(form, false)) {
-                            //validation requirements were found
-                        }
-                    }
-                }
-
-            }
-        }
-        getWindowWidth();
-        getWindowHeight();
-    }, 250);
-}
-
-//This function is deprecated until a way can be found to detect browser events outside the body tag
-function isMouseDown() {
-    document.body.onmousedown = function () {
-        ++mouseDown;
-    };
-    document.body.onmouseup = function () {
-        --mouseDown;
-    };
-}
-
-function getFormOfSelectedElement(element) {
-    getFormOfSelectedElementCount++;
-    if (getFormOfSelectedElementCount < 1000000) {
-        switch (element.tagName.toUpperCase()) {
-            case "FORM":
-                var desiredModeAttribute = element.getAttribute("data-v-desiredMode");
-                if (desiredModeAttribute != null && desiredModeAttribute != "" && desiredModeAttribute != "undefined") {
-                    desiredMode = desiredModeAttribute;
-                }
-
-                var id = element.getAttribute("id");
-                if (id != null && id != "" && id != "undefined") {
-                    elementFormIDCurrent = id;
-                    getFormOfSelectedElementCount = 0;
-                }
-
-                break;
-            case "BODY":
-            case "BASE":
-            case "HEAD":
-            case "HTML":
-            case "META":
-            case "PARAM":
-            case "SCRIPT":
-            case "STYLE":
-            case "TITLE":
-                break;
-            default:
-                getFormOfSelectedElement(element.parentNode);
-                break;
-        }
-    }
-}
-
-function getVisibilityOfSelectedElement(element) {
-    getVisibilityOfSelectedElementCount++;
-    if (getVisibilityOfSelectedElementCount < 1000000) {
-        switch (element.tagName.toUpperCase()) {
-            case "BODY":
-                getVisibilityOfSelectedElementCount = 0;
-                break;
-            default:
-                if (getVisibilityOfSelectedElementCount == 1) {
-                    hasHiddenSelfOrParent = false;
-                }
-                
-                if (element.currentStyle.display.toString().toLowerCase() == 'none' || element.currentStyle.visibility.toString().toLowerCase() == 'hidden' || element.disabled.toString().toLowerCase() == 'true') {
-                    hasHiddenSelfOrParent = true;
-                    getVisibilityOfSelectedElementCount = 0;
-                } else {
-                    getVisibilityOfSelectedElement(element.parentNode);
-                }
-                break;
-        }
-    }
-}
-
-function getWindowWidth() {
-    windowWidthPrevious = windowWidthCurrent;
-    windowWidthCurrent = window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth;
-}
-
-function getWindowHeight() {
-    windowHeightPrevious = windowWidthCurrent;
-    windowHeightCurrent = window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight;
-}
-
-//ELEMENTS
+//INIT METHOD FOR RAW JAVASCRIPT
 function dataValidateAddEvents() {
     startTimerWatcher();
 
@@ -190,7 +103,7 @@ function dataValidateAddEvents() {
                             break;
                         case "FORM":
                             if (element.onsubmit == null) {
-                                element.setAttribute("onsubmit", "return VF(this, false)");
+                                element.setAttribute("onsubmit", "return VF(this, false);");
                             } else {
                                 if (element.onsubmit.toString().indexOf("function") > -1) {
 
@@ -231,7 +144,7 @@ function dataValidateAddEvents() {
                                     break;
                                 case "submit":
                                     if (element.onclick == null) {
-                                        element.setAttribute("onclick", "return VF(this, false)");
+                                        element.setAttribute("onclick", "return VF(this, false);");
                                     } else {
                                         if (typeof element.onclick.toString().indexOf("function") > -1) {
                                             func = element.onclick.toString().substring(element.onclick.toString().indexOf("{") + 2, element.onclick.toString().indexOf("}") - 1);
@@ -242,11 +155,11 @@ function dataValidateAddEvents() {
                                 case "radio":
                                 case "checkbox":
                                     if (element.onclick == null) {
-                                        element.setAttribute("onclick", "return VF(this, true)");
+                                        element.setAttribute("onclick", "VF(this, true);");
                                     } else {
                                         if (typeof element.onclick.toString().indexOf("function") > -1) {
                                             func = element.onclick.toString().substring(element.onclick.toString().indexOf("{") + 2, element.onclick.toString().indexOf("}") - 1);
-                                            element.setAttribute("onclick", "var vf = VF(this, true); if (vf) " + func + "; return vf;");
+                                            element.setAttribute("onclick", "var vf = VF(this, true); if (vf) " + func + ";");
                                         }
                                     }
                                     break;
@@ -254,19 +167,19 @@ function dataValidateAddEvents() {
                                 case "text":
                                 case "file":
                                     if (element.onkeyup == null) {
-                                        element.setAttribute("onkeyup", "return VF(this, true)");
+                                        element.setAttribute("onkeyup", "VF(this, true);");
                                     } else {
                                         if (typeof element.onkeyup.toString().indexOf("function") > -1) {
                                             func = element.onkeyup.toString().substring(element.onkeyup.toString().indexOf("{") + 2, element.onkeyup.toString().indexOf("}") - 1);
-                                            element.setAttribute("onkeyup", "var vf = VF(this, true); if (vf) " + func + "; return vf;");
+                                            element.setAttribute("onkeyup", "var vf = VF(this, true); if (vf) " + func + ";");
                                         }
                                     }
                                     if (element.onfocus == null) {
-                                        element.setAttribute("onfocus", "return VF(this, true)");
+                                        element.setAttribute("onfocus", "removeAllErrorMessages(); VF(this, true);");
                                     } else {
                                         if (typeof element.onfocus.toString().indexOf("function") > -1) {
                                             func = element.onfocus.toString().substring(element.onfocus.toString().indexOf("{") + 2, element.onfocus.toString().indexOf("}") - 1);
-                                            element.setAttribute("onfocus", "var vf = VF(this, true); if (vf) " + func + "; return vf;");
+                                            element.setAttribute("onfocus", "removeAllErrorMessages(); var vf = VF(this, true); if (vf) " + func + ";");
                                         }
                                     }
                                     if (element.onblur == null) {
@@ -284,19 +197,19 @@ function dataValidateAddEvents() {
                             break;
                         case "TEXTAREA":
                             if (element.onkeyup == null) {
-                                element.setAttribute("onkeyup", "return VF(this, true)");
+                                element.setAttribute("onkeyup", "VF(this, true);");
                             } else {
                                 if (typeof element.onkeyup.toString().indexOf("function") > -1) {
                                     func = element.onkeyup.toString().substring(element.onkeyup.toString().indexOf("{") + 2, element.onkeyup.toString().indexOf("}") - 1);
-                                    element.setAttribute("onkeyup", "var vf = VF(this, true); if (vf) " + func + "; return vf;");
+                                    element.setAttribute("onkeyup", "var vf = VF(this, true); if (vf) " + func + ";");
                                 }
                             }
                             if (element.onfocus == null) {
-                                element.setAttribute("onfocus", "return VF(this, true)");
+                                element.setAttribute("onfocus", "removeAllErrorMessages(); VF(this, true);");
                             } else {
                                 if (typeof element.onfocus.toString().indexOf("function") > -1) {
                                     func = element.onfocus.toString().substring(element.onfocus.toString().indexOf("{") + 2, element.onfocus.toString().indexOf("}") - 1);
-                                    element.setAttribute("onfocus", "var vf = VF(this, true); if (vf) " + func + "; return vf;");
+                                    element.setAttribute("onfocus", "removeAllErrorMessages(); var vf = VF(this, true); if (vf) " + func + ";");
                                 }
                             }
                             if (element.onblur == null) {
@@ -321,7 +234,7 @@ function dataValidateAddEvents() {
                         case "LABEL":
                         case "FIELDSET":
                         case "LEGEND":
-                        
+
                         case "OPTGROUP":
                         case "OPTION":
                         case "BUTTON":
@@ -336,7 +249,7 @@ function dataValidateAddEvents() {
     }
 }
 
-//ELEMENTS
+//INIT METHOD FOR JQUERY
 function dataValidateAddEventsJQ() {
     startTimerWatcher();
 
@@ -414,7 +327,6 @@ function dataValidateAddEventsJQ() {
                                 case "submit":
                                     $("#" + element.id).click(
                                         function (event) {
-                                            
                                             if (!VF(this, false)) {
                                                 event.stopImmediatePropagation();
                                             }
@@ -451,6 +363,7 @@ function dataValidateAddEventsJQ() {
                                     );
                                     $("#" + element.id).focus(
                                         function (event) {
+                                            removeAllErrorMessages();
                                             if (!VF(this, true)) {
                                                 event.stopImmediatePropagation();
                                             }
@@ -476,6 +389,7 @@ function dataValidateAddEventsJQ() {
                             );
                             $("#" + element.id).focus(
                                 function (event) {
+                                    removeAllErrorMessages();
                                     if (!VF(this, true)) {
                                         event.stopImmediatePropagation();
                                     }
@@ -514,7 +428,7 @@ function dataValidateAddEventsJQ() {
 //VALIDATE FORM,ELEMENT
 function VF(e, validateSingle) {
     getFormOfSelectedElement(e);
-
+    removeAllErrorMessages();
     if (validateSingle == true) {
         return ValidateElement(e, validateSingle);
     } else {
@@ -531,7 +445,7 @@ function VF(e, validateSingle) {
         if (form != null && form != "undefined") {
             children = new Array();
             processed = new Array();
-            
+
             var id = form.getAttribute("id");
             originNodeId = id;
             getAllChildNodesForNode(id);
@@ -552,231 +466,10 @@ function VF(e, validateSingle) {
         if ((elementErrorCount > 0) || ((elementErrorCount == 0) && (elementHasError))) {
             return false;
         } else {
+            removeAllErrorMessages();
             return true;
         }
     }
-}
-
-function getAllChildNodesForNode(nodeId) {
-    children = crawlNodeLineage(nodeId, "down");
-    processed = new Array();
-}
-
-function crawlNodeLineage(nodeId, direction) {
-    var node = document.getElementById(nodeId);
-    if (node != null) {
-
-        
-        var id = node.getAttribute("id");
-        if (id == null || id == "" || id == "undefined") {
-            domcount = domcount + 1;
-            node.setAttribute("id", "data-v-" + domcount);
-            id = node.getAttribute("id");
-        }
-
-        if (!arrayContainsObject(id)) {
-            processed[processed.length] = id;
-        }
-
-        if (direction != "up" && node.tagName != null && node.tagName != "undefined") {
-            //NOTE -- SUBMIT is skipped because I didn't think I would be validating the element, and all submissions would be occouring from the text
-            switch (node.tagName.toUpperCase()) {
-                case "INPUT":
-                    //left off here... trying to figure out why the forms are not being crawled correctly...
-                    //Other forms are being included
-                    //alert(nodeId + '-' + direction + '-' + node.tagName.toLowerCase() + '-' + node.type.toLowerCase());
-                    switch (node.type.toLowerCase()) {
-                        case "checkbox":
-                        case "file":
-                        case "password":
-                        case "radio":
-                        case "text":
-                            if (node.name != "") {
-                                children[children.length] = nodeId;
-                            }
-                            break;
-                        case "submit":
-                        case "color":
-                        case "date":
-                        case "datetime":
-                        case "datetime-local":
-                        case "email":
-                        case "hidden":
-                        case "image":
-                        case "month":
-                        case "number":
-                        case "button":
-                        case "time":
-                        case "url":
-                        case "week":
-                        case "range":
-                        case "reset":
-                        case "search":
-                        case "tel":
-                        default:
-                            break;
-                    }
-                    break;
-                case "TEXTAREA":
-                    if (node.name != "") {
-                        children[children.length] = nodeId;
-                    }
-                    break;
-                case "LABEL":
-                case "FIELDSET":
-                case "LEGEND":
-                case "SELECT":
-                case "OPTGROUP":
-                case "OPTION":
-                case "BUTTON":
-                case "DATALIST":
-                case "KEYGEN":
-                case "OUTPUT":
-                    break;
-            }
-        }
-
-        //if node has valid unprocessed children
-        var childNodeId = getFirstUsableChildNode(nodeId);
-        if (childNodeId != "-1") {
-            direction = "down";
-            return crawlNodeLineage(childNodeId, direction);
-        }
-        else {
-            var siblingNodeId = getFirstUsableSiblingNode(nodeId);
-            //if node has valid unprocessed siblings
-            if (siblingNodeId != "-1") {
-                direction = "sideways";
-                return crawlNodeLineage(siblingNodeId, direction);
-            }
-            else {
-                //if node has parent != originnode
-                if (node.parentNode.id != originNodeId) {
-                    direction = "up";
-                    return crawlNodeLineage(node.parentNode.id, direction);
-                }
-                else {
-                    //all nodes below the origin have been crawled, return to origin
-                    return children;
-                }
-            }
-        }
-    }
-    return children;
-}
-
-function getFirstUsableChildNode(nodeId) {
-    //SOMETHING TO THINK ABOUT, BECAUSE OTHER DEVELOPERS MODIFY THE DOM
-    //MAYBE I SHOULD COUNT THE NODES AND USE THE COUNT TO ASSIGN AN ID TO ANY NODE 
-    //WITHOUT AN ID
-    //LEFT OFF HERE... TRYING TO FIGURE OUT WHY OPTION TAGS ARE RETURNING BODY TAG
-    var node = document.getElementById(nodeId);
-    for (var n = 0; n < node.children.length; n++) {
-        var child = node.children[n];
-        if (child != null) {
-            var id = child.getAttribute("id");
-            if (id == null || id == "" || id == "undefined") {
-                domcount = domcount + 1;
-                id = "data-v-" + domcount;
-                child.setAttribute("id", id);
-            }
-            if (id != "" && !arrayContainsObject(id)) {
-                child = null;
-                return id;
-            }
-        }
-    }
-    return "-1";
-}
-
-function getFirstUsableSiblingNode(nodeId) {
-
-    var node = document.getElementById(nodeId);
-    for (var n = 0; n < node.parentNode.children.length; n++) {
-        var sibling = node.parentNode.children[n];
-        if (sibling != null) {
-            var id = sibling.getAttribute("id");
-            if (sibling.id != nodeId) {
-                if (id == null || id == "" || id == "undefined") {
-                    domcount = domcount + 1;
-                    id = "data-v-" + domcount;
-                    sibling.setAttribute("id", id);
-                }
-                if (id != "" && !arrayContainsObject(id)) {
-                    sibling = null;
-                    return id;
-                }
-            }
-        }
-    }
-    return "-1";
-}
-
-function arrayContainsObject(objectTarget) {
-    if (objectTarget != "") {
-        for (var i = 0; i < processed.length; i++) {
-            if (processed[i] == objectTarget) {
-                return true;
-            }
-        }
-    }
-    return false;
-}
-
-function nodeIsApprovedType(node) {
-    switch (node.tagName.toUpperCase()) {
-        case "INPUT":
-            switch (node.type.toLowerCase()) {
-                case "checkbox":
-                case "file":
-                case "password":
-                case "radio":
-                case "text":
-                
-                    if (node.name != "") {
-                        return true;
-                    }
-                    break;
-                case "submit":
-                case "color":
-                case "date":
-                case "datetime":
-                case "datetime-local":
-                case "email":
-                case "hidden":
-                case "image":
-                case "month":
-                case "number":
-                case "button":
-                case "time":
-                case "url":
-                case "week":
-                case "range":
-                case "reset":
-                case "search":
-                case "tel":
-                default:
-                    break;
-            }
-            break;
-        case "TEXTAREA":
-            if (node.name != "") {
-                return true;
-            }
-            break;
-        case "LABEL":
-        case "FIELDSET":
-        case "LEGEND":
-        case "SELECT":
-        case "OPTGROUP":
-        case "OPTION":
-        case "BUTTON":
-        case "DATALIST":
-        case "KEYGEN":
-        case "OUTPUT":
-            break;
-    }
-    return false;
 }
 
 function ValidateElement(element, validateSingle) {
@@ -1030,6 +723,318 @@ function ValidateElement(element, validateSingle) {
     }
 }
 
+function startTimerWatcher() {
+    setInterval(function () {
+        if (resizing && windowWidthPrevious == windowWidthCurrent) {
+            resizing = false;
+            var forms = document.getElementsByTagName('form');
+            for (var f = 0; f < forms.length; f++) {
+                var form = forms[f];
+                var id = form.getAttribute("id");
+                if (id != null && id != "" && id != "undefined") {
+                    if (elementFormIDCurrent == id) {
+                        if (!VF(form, false)) {
+                            //validation requirements were found
+                        }
+                    }
+                }
+
+            }
+        }
+        getWindowWidth();
+        getWindowHeight();
+    }, 250);
+}
+
+function getFormOfSelectedElement(element) {
+    getFormOfSelectedElementCount++;
+    if (getFormOfSelectedElementCount < 1000000) {
+        switch (element.tagName.toUpperCase()) {
+            case "FORM":
+                var desiredModeAttribute = element.getAttribute("data-v-desiredMode");
+                if (desiredModeAttribute != null && desiredModeAttribute != "" && desiredModeAttribute != "undefined") {
+                    desiredMode = desiredModeAttribute;
+                }
+
+                var id = element.getAttribute("id");
+                if (id != null && id != "" && id != "undefined") {
+                    elementFormIDCurrent = id;
+                    getFormOfSelectedElementCount = 0;
+                }
+
+                break;
+            case "BODY":
+            case "BASE":
+            case "HEAD":
+            case "HTML":
+            case "META":
+            case "PARAM":
+            case "SCRIPT":
+            case "STYLE":
+            case "TITLE":
+                break;
+            default:
+                getFormOfSelectedElement(element.parentNode);
+                break;
+        }
+    }
+}
+
+function getVisibilityOfSelectedElement(element) {
+    getVisibilityOfSelectedElementCount++;
+    if (getVisibilityOfSelectedElementCount < 1000000) {
+        switch (element.tagName.toUpperCase()) {
+            case "BODY":
+                getVisibilityOfSelectedElementCount = 0;
+                break;
+            default:
+                if (getVisibilityOfSelectedElementCount == 1) {
+                    hasHiddenSelfOrParent = false;
+                }
+
+                if (element.currentStyle.display.toString().toLowerCase() == 'none' || element.currentStyle.visibility.toString().toLowerCase() == 'hidden' || element.disabled.toString().toLowerCase() == 'true') {
+                    hasHiddenSelfOrParent = true;
+                    getVisibilityOfSelectedElementCount = 0;
+                } else {
+                    getVisibilityOfSelectedElement(element.parentNode);
+                }
+                break;
+        }
+    }
+}
+
+function getWindowWidth() {
+    windowWidthPrevious = windowWidthCurrent;
+    windowWidthCurrent = window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth;
+}
+
+function getWindowHeight() {
+    windowHeightPrevious = windowWidthCurrent;
+    windowHeightCurrent = window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight;
+}
+
+function getAllChildNodesForNode(nodeId) {
+    children = crawlNodeLineage(nodeId, "down");
+    processed = new Array();
+}
+
+function crawlNodeLineage(nodeId, direction) {
+    var node = document.getElementById(nodeId);
+    if (node != null) {
+
+
+        var id = node.getAttribute("id");
+        if (id == null || id == "" || id == "undefined") {
+            domcount = domcount + 1;
+            node.setAttribute("id", "data-v-" + domcount);
+            id = node.getAttribute("id");
+        }
+
+        if (!arrayContainsObject(id)) {
+            processed[processed.length] = id;
+        }
+
+        if (direction != "up" && node.tagName != null && node.tagName != "undefined") {
+            //NOTE -- SUBMIT is skipped because I didn't think I would be validating the element, and all submissions would be occouring from the text
+            switch (node.tagName.toUpperCase()) {
+                case "INPUT":
+                    //left off here... trying to figure out why the forms are not being crawled correctly...
+                    //Other forms are being included
+                    //alert(nodeId + '-' + direction + '-' + node.tagName.toLowerCase() + '-' + node.type.toLowerCase());
+                    switch (node.type.toLowerCase()) {
+                        case "checkbox":
+                        case "file":
+                        case "password":
+                        case "radio":
+                        case "text":
+                            if (node.name != "") {
+                                children[children.length] = nodeId;
+                            }
+                            break;
+                        case "submit":
+                        case "color":
+                        case "date":
+                        case "datetime":
+                        case "datetime-local":
+                        case "email":
+                        case "hidden":
+                        case "image":
+                        case "month":
+                        case "number":
+                        case "button":
+                        case "time":
+                        case "url":
+                        case "week":
+                        case "range":
+                        case "reset":
+                        case "search":
+                        case "tel":
+                        default:
+                            break;
+                    }
+                    break;
+                case "TEXTAREA":
+                    if (node.name != "") {
+                        children[children.length] = nodeId;
+                    }
+                    break;
+                case "LABEL":
+                case "FIELDSET":
+                case "LEGEND":
+                case "SELECT":
+                case "OPTGROUP":
+                case "OPTION":
+                case "BUTTON":
+                case "DATALIST":
+                case "KEYGEN":
+                case "OUTPUT":
+                    break;
+            }
+        }
+
+        //if node has valid unprocessed children
+        var childNodeId = getFirstUsableChildNode(nodeId);
+        if (childNodeId != "-1") {
+            direction = "down";
+            return crawlNodeLineage(childNodeId, direction);
+        }
+        else {
+            var siblingNodeId = getFirstUsableSiblingNode(nodeId);
+            //if node has valid unprocessed siblings
+            if (siblingNodeId != "-1") {
+                direction = "sideways";
+                return crawlNodeLineage(siblingNodeId, direction);
+            }
+            else {
+                //if node has parent != originnode
+                if (node.parentNode.id != originNodeId) {
+                    direction = "up";
+                    return crawlNodeLineage(node.parentNode.id, direction);
+                }
+                else {
+                    //all nodes below the origin have been crawled, return to origin
+                    return children;
+                }
+            }
+        }
+    }
+    return children;
+}
+
+function getFirstUsableChildNode(nodeId) {
+    //SOMETHING TO THINK ABOUT, BECAUSE OTHER DEVELOPERS MODIFY THE DOM
+    //MAYBE I SHOULD COUNT THE NODES AND USE THE COUNT TO ASSIGN AN ID TO ANY NODE 
+    //WITHOUT AN ID
+    //LEFT OFF HERE... TRYING TO FIGURE OUT WHY OPTION TAGS ARE RETURNING BODY TAG
+    var node = document.getElementById(nodeId);
+    for (var n = 0; n < node.children.length; n++) {
+        var child = node.children[n];
+        if (child != null) {
+            var id = child.getAttribute("id");
+            if (id == null || id == "" || id == "undefined") {
+                domcount = domcount + 1;
+                id = "data-v-" + domcount;
+                child.setAttribute("id", id);
+            }
+            if (id != "" && !arrayContainsObject(id)) {
+                child = null;
+                return id;
+            }
+        }
+    }
+    return "-1";
+}
+
+function getFirstUsableSiblingNode(nodeId) {
+
+    var node = document.getElementById(nodeId);
+    for (var n = 0; n < node.parentNode.children.length; n++) {
+        var sibling = node.parentNode.children[n];
+        if (sibling != null) {
+            var id = sibling.getAttribute("id");
+            if (sibling.id != nodeId) {
+                if (id == null || id == "" || id == "undefined") {
+                    domcount = domcount + 1;
+                    id = "data-v-" + domcount;
+                    sibling.setAttribute("id", id);
+                }
+                if (id != "" && !arrayContainsObject(id)) {
+                    sibling = null;
+                    return id;
+                }
+            }
+        }
+    }
+    return "-1";
+}
+
+function arrayContainsObject(objectTarget) {
+    if (objectTarget != "") {
+        for (var i = 0; i < processed.length; i++) {
+            if (processed[i] == objectTarget) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+function nodeIsApprovedType(node) {
+    switch (node.tagName.toUpperCase()) {
+        case "INPUT":
+            switch (node.type.toLowerCase()) {
+                case "checkbox":
+                case "file":
+                case "password":
+                case "radio":
+                case "text":
+
+                    if (node.name != "") {
+                        return true;
+                    }
+                    break;
+                case "submit":
+                case "color":
+                case "date":
+                case "datetime":
+                case "datetime-local":
+                case "email":
+                case "hidden":
+                case "image":
+                case "month":
+                case "number":
+                case "button":
+                case "time":
+                case "url":
+                case "week":
+                case "range":
+                case "reset":
+                case "search":
+                case "tel":
+                default:
+                    break;
+            }
+            break;
+        case "TEXTAREA":
+            if (node.name != "") {
+                return true;
+            }
+            break;
+        case "LABEL":
+        case "FIELDSET":
+        case "LEGEND":
+        case "SELECT":
+        case "OPTGROUP":
+        case "OPTION":
+        case "BUTTON":
+        case "DATALIST":
+        case "KEYGEN":
+        case "OUTPUT":
+            break;
+    }
+    return false;
+}
+
 function removeAllErrorMessages() {
     var elements = document.getElementsByClassName("AutoValidateErrors");
     for (var i = elements.length - 1; i >= 0; i--) {
@@ -1193,8 +1198,6 @@ function errorAddToLastNodeInGroup(element, message, errorType) {
     }
 }
 
-/////////
-
 function positionErrorElement(origin, target) {
 
     var c = origin;
@@ -1347,8 +1350,6 @@ function findPosition(obj) {
     return [curleft, curtop];
 }
 
-/////////
-
 function getElementValue(element) {
     if (element != null) {
         var elementTagName = element.tagName.toUpperCase();
@@ -1389,22 +1390,6 @@ function IsLengthInRange(element, min, max) {
         return false;
     }
 }
-
-
-// RFC822 email address spec
-var sQtext = '[^\\x0d\\x22\\x5c\\x80-\\xff]';
-var sDtext = '[^\\x0d\\x5b-\\x5d\\x80-\\xff]';
-var sAtom = '[^\\x00-\\x20\\x22\\x28\\x29\\x2c\\x2e\\x3a-\\x3c\\x3e\\x40\\x5b-\\x5d\\x7f-\\xff]+';
-var sQuotedPair = '\\x5c[\\x00-\\x7f]';
-var sDomainLiteral = '\\x5b(' + sDtext + '|' + sQuotedPair + ')*\\x5d';
-var sQuotedString = '\\x22(' + sQtext + '|' + sQuotedPair + ')*\\x22';
-var sDomainRef = sAtom;
-var sSubDomain = '(' + sDomainRef + '|' + sDomainLiteral + ')';
-var sWord = '(' + sAtom + '|' + sQuotedString + ')';
-var sDomain = sSubDomain + '(\\x2e' + sSubDomain + ')*';
-var sLocalPart = sWord + '(\\x2e' + sWord + ')*';
-var sAddrSpec = sLocalPart + '\\x40' + sDomain;
-var sValidEmail = '^' + sAddrSpec + '$'; // as whole string
 
 function IsRFC822Email(email) {
     if (email.length > 0) {
